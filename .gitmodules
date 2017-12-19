@@ -1,0 +1,3 @@
+[submodule "GenomeBusters"]
+	path = GenomeBusters
+	url = git@github.com:TrentonSarnowski/GenomeBusters.git
