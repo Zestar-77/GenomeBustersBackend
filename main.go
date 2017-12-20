@@ -7,7 +7,7 @@ import (
 
 // serverRoot is a constant string stating where the root of the filesystem is for serving files.
 // TODO: Make this configurable. It should probably also default to something like '/opt/GenomeBusters/www/'
-var serverRoot = "./www"
+var serverRoot = "./GenomeBusters/polymorphs-frontend-master/build"
 
 func main() {
 	http.HandleFunc("/api/", webserver.APIRequestHandler)
