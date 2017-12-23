@@ -1,15 +1,52 @@
 package webserver
 
 import (
+	"bufio"
+	"bytes"
+	"fmt"
+	"io"
 	"net/http"
+	"regexp"
+	"strings"
+	"sync"
 )
 
-// APIRequestHandler handles api server commands
-func APIRequestHandler(w http.ResponseWriter, r *http.Request) {
-	url := r.URL.Path[len("/API/"):]
-	switch url {
-	case "scanForGenes":
-		// TODO
-		break
+var isFasta *regexp.Regexp
+var compileIsFasta sync.Once
+
+// GeneSearch handles an uploaded fasta file and handles searching.
+func GeneSearch(w http.ResponseWriter, r *http.Request) {
+	compileIsFasta.Do(func() {
+		if reg, err := regexp.Compile("*.\\.[fF][aA][sS][tT]"); err == nil {
+			isFasta = reg
+		} else {
+			panic(err)
+		}
+	})
+	// url := r.URL.Path[len("/api/gene_search/"):]
+	file, header, err := r.FormFile("file")
+	if err != nil || isFasta.MatchString(header.Filename) {
+		fmt.Printf("Could not read uploaded file. Is it a FASTA file?")
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
+	defer file.Close()
+
+	reader := bufio.NewReader(file)
+	var buffer bytes.Buffer
+	reader.ReadBytes('\n')
+	for err == nil {
+		var line string
+		line, err = reader.ReadString('\n')
+		if err != nil {
+			buffer.WriteString(strings.TrimSpace(line))
+		}
+	}
+	if err != io.EOF {
+		fmt.Printf("Could not read uploaded file. Is it a FASTA file?")
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// analyzer.AnalyzeFastaData(buffer.Bytes())
 }
