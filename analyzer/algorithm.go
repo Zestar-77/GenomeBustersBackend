@@ -11,6 +11,13 @@ func codonToAmino(local []rune,  si int, le int) rune{
 	st := si%le
 	su := (si+1)%le
 	sv := (si+2)%le
+
+	codonMap := map[string]rune{
+		"TTT": 'F',
+		"TTC": 'F',
+		"TTA": 'L',
+	}
+
 	switch (local[st]){
 	case 'T':
 		switch (local[su]) {
@@ -123,7 +130,6 @@ func codonToAmino(local []rune,  si int, le int) rune{
 			case 'G':
 				ret='R'
 				break
-
 			}
 			break
 		default:
@@ -160,11 +166,13 @@ func codonToAmino(local []rune,  si int, le int) rune{
 	}
 	return ret
 }
+
 type gene struct{
 	start int
 	end int
 	identity []rune
 }
+
 func thing( genome []rune, arrayLength int) []gene{
 	genome2 := make([]rune,arrayLength)
 	for i:=0; i<arrayLength; i++{
@@ -188,6 +196,7 @@ func thing( genome []rune, arrayLength int) []gene{
 	return append(gen1,gen2...);
 
 }
+
 func count(runeArray []rune, arrayLength int) []gene {
 	//srand(time(nullptr))
 
