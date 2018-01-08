@@ -6,165 +6,88 @@ local:= array
 si= start index
 int le= array length for loop back
  */
-func codonToAmino(local []rune,  si int, le int) rune{
-	var ret rune
-	st := si%le
-	su := (si+1)%le
-	sv := (si+2)%le
 
+
+
+func codonToAmino(local []rune,  si int, le int) rune{
 	codonMap := map[string]rune{
 		"TTT": 'F',
 		"TTC": 'F',
 		"TTA": 'L',
+		"TTG": 'L',
+		"CTT": 'L',
+		"CTC": 'L',
+		"CTA": 'L',
+		"CTG": 'L',
+		"ATT": 'I',
+		"ATC": 'I',
+		"ATA": 'I',
+		"AUG": 'M',
+		"GTT": 'V',
+		"GTC": 'V',
+		"GTA": 'V',
+		"GTG": 'V',
+
+		"TCT": 'S',
+		"TCC": 'S',
+		"TCA": 'S',
+		"TCG": 'S',
+		"CCT": 'P',
+		"CCC": 'P',
+		"CCA": 'P',
+		"CCG": 'P',
+		"ACT": 'T',
+		"ACC": 'T',
+		"ACA": 'T',
+		"ACG": 'T',
+		"GCT": 'A',
+		"GCC": 'A',
+		"GCA": 'A',
+		"GCG": 'A',
+
+
+		"TAT": 'Y',
+		"TAC": 'Y',
+		"TAA":     0,
+		"TAG":   0,
+		"CAT": 'H',
+		"CAC": 'H',
+		"CAA": 'Q',
+		"CAG": 'Q',
+		"AAT": 'N',
+		"AAC": 'N',
+		"AAA": 'K',
+		"AAG": 'K',
+		"GAT": 'D',
+		"GAC": 'D',
+		"GAA": 'E',
+		"GAG": 'E',
+
+		"TGT": 'C',
+		"TGC": 'C',
+		"TGA":   0,
+		"TGG": 'W',
+		"CGT": 'R',
+		"CGC": 'R',
+		"CGA": 'R',
+		"CGG": 'R',
+		"AGT": 'S',
+		"AGC": 'S',
+		"AGA": 'R',
+		"AGG": 'R',
+		"GGT": 'G',
+		"GGC": 'G',
+		"GGA": 'G',
+		"GGG": 'G',
 	}
-
-	switch (local[st]){
-	case 'T':
-		switch (local[su]) {
-		case 'T':
-			switch (local[su]) {
-			case 'T':
-			case 'C':
-				ret='F'
-				break
-			case 'A':
-			case 'G':
-				ret='L'
-				break
-			default:
-
-			}
-			break
-		case 'C':
-			ret='S'
-			break
-		case 'A':
-			switch (local[sv]) {
-			case 'T':
-			case 'C':
-				ret='Y'
-				break
-			case 'A':
-			case 'G':
-				break
-
-			}
-			break
-		case 'G':
-			switch (local[sv]) {
-			case 'T':
-			case 'C':
-				ret='C'
-				break
-			case 'A':
-				break
-			case 'G':
-				ret='W'
-				break
-			}
-			break
-		}
-		break
-	case 'C':
-		switch (local[su]) {
-		case 'T':
-			ret='L'
-			break
-		case 'C':
-			ret='P'
-			break
-		case 'A':
-			switch (local[sv]) {
-			case 'T':
-			case 'C':
-				ret='H'
-				break
-			case 'A':
-			case 'G':
-				ret='Q'
-				break
-
-			}
-			break
-		case 'G':
-			ret='R'
-			break
-		}
-		break
-	case 'A':
-		switch (local[su]) {
-		case 'T':
-			switch (local[sv]) {
-			case 'T':
-			case 'C':
-			case 'A':
-				ret='I'
-				break
-			case 'G':
-				ret='M'
-				break
-			}
-			break
-		case 'C':
-			ret='T'
-			break
-		case 'A':
-			switch (local[sv]) {
-			case 'T':
-			case 'C':
-				ret='N'
-				break
-			case 'A':
-			case 'G':
-				ret='K'
-				break
-			}
-			break
-		case 'G':
-			switch (local[sv]) {
-			case 'T':
-			case 'C':
-				ret='S'
-				break
-			case 'A':
-			case 'G':
-				ret='R'
-				break
-			}
-			break
-		default:
-		}
-		break
-	case 'G':
-		switch (local[su]) {
-		case 'T':
-			ret='V'
-			break
-		case 'C':
-			ret='A'
-			break
-		case 'A':
-			switch (local[sv]) {
-			case 'T':
-			case 'C':
-				ret='D'
-				break
-			case 'A':
-			case 'G':
-				ret='E'
-				break
-
-			}
-			break
-		case 'G':
-			ret='G'
-			break
-
-		}
-		break
-
-	}
-	return ret
+	var ret rune
+	st := si%le
+	su := (si+1)%le
+	sv := (si+2)%le
+	var codon string;
+	codon = string(local[st])+string(local[su])+string(local[sv])
+	ret=codonMap[codon];
+	return ret;
 }
 
 type gene struct{
@@ -219,8 +142,8 @@ func count(runeArray []rune, arrayLength int) []gene {
 				fmt.Println(current.start," ", current.end)
 				current=gene{0,0, nil}
 			}else{
-				append(current.identity, codonToAmino(runeArray,genePosition,arrayLength)
-				i+=3
+				current.identity = append(current.identity, codonToAmino(runeArray,genePosition,arrayLength))
+				i += 3
 			}
 		}else{
 			if runeArray[i%arrayLength]=='A'&&temp=='T'&&temp2=='G' {
