@@ -2,12 +2,6 @@ package analyzer
 
 import "fmt"
 
-/**
-local:= array
-si= start index
-int le= array length for loop back
-*/
-
 var codonMap = map[string]rune{
 	"TTT": 'F',
 	"TTC": 'F',
@@ -78,11 +72,11 @@ var codonMap = map[string]rune{
 	"GGG": 'G',
 }
 
-func codonToAmino(local []rune, si int, le int) rune {
+func codonToAmino(local []rune, si int) rune {
 	var ret rune
-	st := si % le
-	su := (si + 1) % le
-	sv := (si + 2) % le
+	st := si % len(local)
+	su := (si + 1) % len(local)
+	sv := (si + 2) % len(local)
 	var codon string
 	codon = string(local[st]) + string(local[su]) + string(local[sv])
 	ret = codonMap[codon]
@@ -95,33 +89,52 @@ type gene struct {
 	identity []rune
 }
 
-func thing(genome []rune, arrayLength int) []gene {
-	genome2 := make([]rune, arrayLength)
-	for i := 0; i < arrayLength; i++ {
-		switch genome[i] {
+func getPermutations(genome []rune) (invert []rune, reverse []rune, inverse []rune) {
+	invert = make([]rune, len(genome))
+	reverse = make([]rune, len(genome))
+	inverse = make([]rune, len(genome))
+	for i, v := range genome {
+		switch v {
 		case 'T':
-			genome2[i] = 'A'
+			invert[i] = 'A'
+			inverse[len(genome)-1-i] = 'A'
 			break
 		case 'G':
-			genome2[i] = 'C'
+			invert[i] = 'C'
+			inverse[len(genome)-1-i] = 'A'
 			break
 		case 'A':
-			genome2[i] = 'T'
+			invert[i] = 'T'
+			inverse[len(genome)-1-i] = 'A'
 			break
 		case 'C':
-			genome2[i] = 'G'
+			invert[i] = 'G'
+			inverse[len(genome)-1-i] = 'A'
 			break
 		}
+		reverse[len(genome)-1-i] = v
 	}
-	gen1 := count(genome, arrayLength)
-	gen2 := count(genome2, arrayLength)
-	return append(gen1, gen2...)
-
+	return
 }
 
-func count(runeArray []rune, arrayLength int) []gene {
-	//srand(time(nullptr))
+func thing(genome []rune) []gene {
+	gen1 := make(chan []gene)
+	gen2 := make(chan []gene)
+	gen3 := make(chan []gene)
+	gen4 := make(chan []gene)
 
+	go count(genome, gen1)
+
+	invert, reverse, inverse := getPermutations(genome)
+
+	go count(invert, gen1)
+	go count(reverse, gen2)
+	go count(inverse, gen3)
+
+	return append(append(append(<-gen1, <-gen2...), <-gen3...), <-gen4...)
+}
+
+func count(runeArray []rune, genes chan []gene) {
 	var geneStore []gene
 	genePosition := 0
 	inphase := false
@@ -129,11 +142,11 @@ func count(runeArray []rune, arrayLength int) []gene {
 	temp2 := '0'
 	current := gene{0, 0, nil}
 	//3 is codon length this does not change, 1 and 2 are checking the entirety of the codon
-	for i := 0; i < arrayLength+3 || inphase; {
-		temp = runeArray[i%arrayLength+1]
-		temp2 = runeArray[i%arrayLength+2]
+	for i := 0; i < len(runeArray)+3 || inphase; {
+		temp = runeArray[i%len(runeArray)+1]
+		temp2 = runeArray[i%len(runeArray)+2]
 		if inphase {
-			if runeArray[i%arrayLength] == 'T' && ((temp == 'A' && (temp2 == 'A' || temp2 == 'G')) || (temp == 'G' && temp2 == 'A')) {
+			if runeArray[i%len(runeArray)] == 'T' && ((temp == 'A' && (temp2 == 'A' || temp2 == 'G')) || (temp == 'G' && temp2 == 'A')) {
 				inphase = false
 				current.end = i
 				geneStore[genePosition] = current
@@ -141,11 +154,11 @@ func count(runeArray []rune, arrayLength int) []gene {
 				fmt.Println(current.start, " ", current.end)
 				current = gene{0, 0, nil}
 			} else {
-				current.identity = append(current.identity, codonToAmino(runeArray, genePosition, arrayLength))
+				current.identity = append(current.identity, codonToAmino(runeArray, genePosition))
 				i += 3
 			}
 		} else {
-			if runeArray[i%arrayLength] == 'A' && temp == 'T' && temp2 == 'G' {
+			if runeArray[i%len(runeArray)] == 'A' && temp == 'T' && temp2 == 'G' {
 				inphase = true
 				current.start = i
 			} else {
@@ -153,5 +166,5 @@ func count(runeArray []rune, arrayLength int) []gene {
 			}
 		}
 	}
-	return geneStore
+	genes <- geneStore
 }
