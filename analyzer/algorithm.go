@@ -1,6 +1,6 @@
 package analyzer
 
-import "fmt"
+//import "fmt"
 
 var codonMap = map[string]rune{
 	"TTT": 'F',
@@ -101,15 +101,15 @@ func getPermutations(genome []rune) (invert []rune, reverse []rune, inverse []ru
 			break
 		case 'G':
 			invert[i] = 'C'
-			inverse[len(genome)-1-i] = 'A'
+			inverse[len(genome)-1-i] = 'C'
 			break
 		case 'A':
 			invert[i] = 'T'
-			inverse[len(genome)-1-i] = 'A'
+			inverse[len(genome)-1-i] = 'T'
 			break
 		case 'C':
 			invert[i] = 'G'
-			inverse[len(genome)-1-i] = 'A'
+			inverse[len(genome)-1-i] = 'G'
 			break
 		}
 		reverse[len(genome)-1-i] = v
@@ -122,49 +122,54 @@ func thing(genome []rune) []gene {
 	gen2 := make(chan []gene)
 	gen3 := make(chan []gene)
 	gen4 := make(chan []gene)
-
 	go count(genome, gen1)
-
 	invert, reverse, inverse := getPermutations(genome)
-
-	go count(invert, gen1)
-	go count(reverse, gen2)
-	go count(inverse, gen3)
-
+	go count(invert, gen2)
+	go count(reverse, gen3)
+	go count(inverse, gen4)
 	return append(append(append(<-gen1, <-gen2...), <-gen3...), <-gen4...)
 }
 
 func count(runeArray []rune, genes chan []gene) {
-	var geneStore []gene
-	genePosition := 0
+	geneStore := make([]gene, 0)
 	inphase := false
 	temp := '0'
 	temp2 := '0'
-	current := gene{0, 0, nil}
+	current := gene{-1, -1, nil}
+
 	//3 is codon length this does not change, 1 and 2 are checking the entirety of the codon
-	for i := 0; i < len(runeArray)+3 || inphase; {
-		temp = runeArray[i%len(runeArray)+1]
-		temp2 = runeArray[i%len(runeArray)+2]
-		if inphase {
+	for i := 0; i < len(runeArray) || inphase; {
+		temp = runeArray[(i+1)%len(runeArray)]
+		temp2 = runeArray[(i+2)%len(runeArray)]
+		if inphase && current.start%len(runeArray)!=i%len(runeArray) {
 			if runeArray[i%len(runeArray)] == 'T' && ((temp == 'A' && (temp2 == 'A' || temp2 == 'G')) || (temp == 'G' && temp2 == 'A')) {
 				inphase = false
-				current.end = i
-				geneStore[genePosition] = current
+				current.end = i%len(runeArray)
 				i = current.start + 1
-				fmt.Println(current.start, " ", current.end)
-				current = gene{0, 0, nil}
+				current.start=current.start%len(runeArray);
+				geneStore = append(geneStore,current)
+
+				//fmt.Println(current.start, " ", current.end)
+				current = gene{-1, -1, nil}
 			} else {
-				current.identity = append(current.identity, codonToAmino(runeArray, genePosition))
+				current.identity = append(current.identity, codonToAmino(runeArray, i))
 				i += 3
 			}
+		}else if i%len(runeArray) == current.start%len(runeArray) {
+			genes<-nil
+			panic("Never ending gene")
+
 		} else {
 			if runeArray[i%len(runeArray)] == 'A' && temp == 'T' && temp2 == 'G' {
 				inphase = true
 				current.start = i
+				current.identity = append(current.identity, codonToAmino(runeArray, i))
+				i+=3
 			} else {
 				i++
 			}
 		}
 	}
 	genes <- geneStore
+
 }
