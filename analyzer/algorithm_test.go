@@ -24,91 +24,91 @@ import "testing"
 	}
 	func TestGetOneInSequence(T *testing.T){
 		test := [11]rune{'A', 'T', 'G', 'C', 'T', 'T', 'T', 'G', 'A', 'A','A'}
-		gen1 := make(chan []gene)
+		gen1 := make(chan []Gene)
 
-		go count(test[:],gen1)
+		go count(test[:],gen1, &concurrentCounter{})
 		temp:= <- gen1
-		if(temp[0].start!=0){
+		if(temp[0].Start!=0){
 			T.Error("incorrect Start")
 		}
-		if(temp[0].end!=6){
+		if(temp[0].End!=6){
 			T.Error("incorrect End")
 		}
 	}
 func TestGetOneInSequenceStartOverEnd(T *testing.T){
 	test := [11]rune{ 'C', 'T', 'T', 'T', 'G', 'A', 'A','A', 'A', 'T', 'G'}
-	gen1 := make(chan []gene)
+	gen1 := make(chan []Gene)
 
-	go count(test[:],gen1)
+	go count(test[:],gen1, &concurrentCounter{})
 	temp:= <- gen1
-	if(temp[0].start!=8){
+	if(temp[0].Start!=8){
 		T.Error("incorrect Start")
 	}
-	if(temp[0].end!=3){
+	if(temp[0].End!=3){
 		T.Error("incorrect End")
 	}
 }
 func TestGetOneInSequenceLoopBack(T *testing.T){
 	test := [11]rune{ 'G','C', 'T', 'T', 'T', 'G', 'A', 'A','A', 'A', 'T'}
-	gen1 := make(chan []gene)
+	gen1 := make(chan []Gene)
 
-	go count(test[:],gen1)
+	go count(test[:],gen1, &concurrentCounter{})
 	temp:= <- gen1
-	if(temp[0].start!=9){
+	if(temp[0].Start!=9){
 		T.Error("incorrect Start")
 	}
-	if(temp[0].end!=4){
+	if(temp[0].End!=4){
 		T.Error("incorrect End")
 	}
 }
 
 func TestGetOneInSequenceEndOverEndTGA(T *testing.T){
 	test := [11]rune{ 'G', 'A', 'T', 'G', 'A', 'A','A', 'T', 'T', 'G', 'T'}
-	gen1 := make(chan []gene)
+	gen1 := make(chan []Gene)
 
-	go count(test[:],gen1)
+	go count(test[:],gen1, &concurrentCounter{})
 	temp:= <- gen1
-	if(temp[0].start!=1){
+	if(temp[0].Start!=1){
 		T.Error("incorrect Start")
 	}
-	if(temp[0].end!=10){
+	if(temp[0].End!=10){
 		T.Error("incorrect End")
 	}
 }
 
 func TestGetOneInSequenceEndOverEndTAG(T *testing.T){
 	test := [11]rune{ 'A', 'G', 'T', 'G', 'A', 'A','A', 'A', 'T', 'G', 'T'}
-	gen1 := make(chan []gene)
+	gen1 := make(chan []Gene)
 
-	go count(test[:],gen1)
+	go count(test[:],gen1, &concurrentCounter{})
 	temp:= <- gen1
-	if(temp[0].start!=7){
+	if(temp[0].Start!=7){
 		T.Error("incorrect Start")
 	}
-	if(temp[0].end!=10){
+	if(temp[0].End!=10){
 		T.Error("incorrect End")
 	}
 }
 
 func TestGetOneInSequenceEndOverEndTAA(T *testing.T){
-	test := [11]rune{ 'A', 'A', 'T', 'G', 'A', 'A','A', 'A', 'T', 'G', 'T'}
-	gen1 := make(chan []gene)
+	test := [11]rune{ 'A', 'A', 'A', 'A', 'A', 'A','A', 'A', 'T', 'G', 'T'}
+	gen1 := make(chan []Gene)
 
-	go count(test[:],gen1)
+	go count(test[:],gen1, &concurrentCounter{})
 	temp:= <- gen1
-	if(temp[0].start!=7){
+	if(temp[0].Start!=7){
 		T.Error("incorrect Start")
 	}
-	if(temp[0].end!=10){
+	if(temp[0].End!=10){
 		T.Error("incorrect End")
 	}
 }
 
 func TestNoGene(T *testing.T){
 	test := [11]rune{ 'A', 'A', 'A', 'A', 'A', 'A','A', 'A', 'A', 'A', 'A'}
-	gen1 := make(chan []gene)
+	gen1 := make(chan []Gene)
 
-	go count(test[:],gen1)
+	go count(test[:],gen1, &concurrentCounter{})
 	temp:= <- gen1
 	if(len(temp)!=0){
 		T.Error("No Gene")
@@ -117,7 +117,7 @@ func TestNoGene(T *testing.T){
 
 func TestInfiniteGene(T *testing.T){
 	test := [11]rune{ 'A', 'A', 'A', 'A', 'A', 'A','A', 'A', 'T', 'G', 'G'}
-	gen1 := make(chan []gene)
+	gen1 := make(chan []Gene)
 	go func() {
 		defer func() {
 			r := recover()
@@ -137,7 +137,7 @@ func TestInfiniteGene(T *testing.T){
 			}
 
 		}()
-		count(test[:], gen1)
+		count(test[:], gen1, &concurrentCounter{})
 
 	}()
 	<- gen1
