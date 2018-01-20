@@ -8,22 +8,26 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
-	"sync"
 )
 
 var isFasta *regexp.Regexp
-var compileIsFasta sync.Once
+var isGenBank *regexp.Regexp
+
+func init() {
+	if reg, err := regexp.Compile("*.\\.[fF][aA][sS][tT]"); err == nil {
+		isFasta = reg
+	} else {
+		panic(err)
+	}
+	if reg, err := regexp.Compile("*.\\.[gG][bG]"); err == nil {
+		isFasta = reg
+	} else {
+		panic(err)
+	}
+}
 
 // GeneSearch handles an uploaded fasta file and handles searching.
 func GeneSearch(w http.ResponseWriter, r *http.Request) {
-	compileIsFasta.Do(func() {
-		if reg, err := regexp.Compile("*.\\.[fF][aA][sS][tT]"); err == nil {
-			isFasta = reg
-		} else {
-			panic(err)
-		}
-	})
-	// url := r.URL.Path[len("/api/gene_search/"):]
 	file, header, err := r.FormFile("file")
 	if err != nil || isFasta.MatchString(header.Filename) {
 		fmt.Printf("Could not read uploaded file. Is it a FASTA file?")

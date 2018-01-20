@@ -89,6 +89,7 @@ func codonToAmino(local []rune, si int) rune {
 
 // Gene is a struct that holds information about a gene. Upmost Care must be taken when initializing this.
 type Gene struct {
+	UUID     int    `json:"id"`
 	Start    int    `json:"start"`
 	End      int    `json:"end"`
 	Label    string `json:"label"`
@@ -129,22 +130,23 @@ func thing(genome []rune) []Gene {
 	gen3 := make(chan []Gene)
 	gen4 := make(chan []Gene)
 	UnknownCounter := &concurrentCounter{}
-	go count(genome, gen1, UnknownCounter)
+	UUIDCounter := &concurrentCounter{}
+	go count(genome, gen1, UnknownCounter, UUIDCounter)
 	invert, reverse, inverse := getPermutations(genome)
-	go count(invert, gen2, UnknownCounter)
-	go count(reverse, gen3, UnknownCounter)
-	go count(inverse, gen4, UnknownCounter)
+	go count(invert, gen2, UnknownCounter, UUIDCounter)
+	go count(reverse, gen3, UnknownCounter, UUIDCounter)
+	go count(inverse, gen4, UnknownCounter, UUIDCounter)
 	return append(append(append(<-gen1, <-gen2...), <-gen3...), <-gen4...)
 }
 
-func count(runeArray []rune, genes chan []Gene, UnknownCounter *concurrentCounter) {
+func count(runeArray []rune, genes chan []Gene, UnknownCounter, UUIDCounter *concurrentCounter) {
 	geneStore := make([]Gene, 0)
 	inphase := false
 	temp := '0'
 	temp2 := '0'
 
 	unk := UnknownCounter.addAndGetCount()
-	current := Gene{-1, -1, "unat" + strconv.Itoa(unk), nil}
+	current := Gene{UUIDCounter.addAndGetCount(), -1, -1, "unat" + strconv.Itoa(unk), nil}
 
 	//3 is codon length this does not change, 1 and 2 are checking the entirety of the codon
 	for i := 0; i < len(runeArray) || inphase; {
@@ -160,8 +162,8 @@ func count(runeArray []rune, genes chan []Gene, UnknownCounter *concurrentCounte
 
 				//fmt.Println(current.start, " ", current.end)
 				// TODO Get actual gene label
-				unk := UnknownCounter.addAndGetCount()
-				current = Gene{-1, -1, "unat" + strconv.Itoa(unk), nil}
+				unk = UnknownCounter.addAndGetCount()
+				current = Gene{UUIDCounter.addAndGetCount(), -1, -1, "unat" + strconv.Itoa(unk), nil}
 			} else {
 				current.Identity = append(current.Identity, codonToAmino(runeArray, i))
 				i += 3
