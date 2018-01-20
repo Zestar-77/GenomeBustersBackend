@@ -1,5 +1,7 @@
 package analyzer
 
+import "strconv"
+
 //import "fmt"
 
 var codonMap = map[string]rune{
@@ -86,6 +88,7 @@ func codonToAmino(local []rune, si int) rune {
 type gene struct {
 	start    int
 	end      int
+	label    string
 	identity []rune
 }
 
@@ -122,41 +125,46 @@ func thing(genome []rune) []gene {
 	gen2 := make(chan []gene)
 	gen3 := make(chan []gene)
 	gen4 := make(chan []gene)
-	go count(genome, gen1)
+	UnknownCounter := &concurrentCounter{}
+	go count(genome, gen1, UnknownCounter)
 	invert, reverse, inverse := getPermutations(genome)
-	go count(invert, gen2)
-	go count(reverse, gen3)
-	go count(inverse, gen4)
+	go count(invert, gen2, UnknownCounter)
+	go count(reverse, gen3, UnknownCounter)
+	go count(inverse, gen4, UnknownCounter)
 	return append(append(append(<-gen1, <-gen2...), <-gen3...), <-gen4...)
 }
 
-func count(runeArray []rune, genes chan []gene) {
+func count(runeArray []rune, genes chan []gene, UnknownCounter *concurrentCounter) {
 	geneStore := make([]gene, 0)
 	inphase := false
 	temp := '0'
 	temp2 := '0'
-	current := gene{-1, -1, nil}
+
+	unk := UnknownCounter.addAndGetCount()
+	current := gene{-1, -1, "unat" + strconv.Itoa(unk), nil}
 
 	//3 is codon length this does not change, 1 and 2 are checking the entirety of the codon
 	for i := 0; i < len(runeArray) || inphase; {
 		temp = runeArray[(i+1)%len(runeArray)]
 		temp2 = runeArray[(i+2)%len(runeArray)]
-		if inphase && current.start%len(runeArray)!=i%len(runeArray) {
+		if inphase && current.start%len(runeArray) != i%len(runeArray) {
 			if runeArray[i%len(runeArray)] == 'T' && ((temp == 'A' && (temp2 == 'A' || temp2 == 'G')) || (temp == 'G' && temp2 == 'A')) {
 				inphase = false
-				current.end = i%len(runeArray)
+				current.end = i % len(runeArray)
 				i = current.start + 1
-				current.start=current.start%len(runeArray);
-				geneStore = append(geneStore,current)
+				current.start = current.start % len(runeArray)
+				geneStore = append(geneStore, current)
 
 				//fmt.Println(current.start, " ", current.end)
-				current = gene{-1, -1, nil}
+				// TODO Get actual gene label
+				unk := UnknownCounter.addAndGetCount()
+				current = gene{-1, -1, "unat" + strconv.Itoa(unk), nil}
 			} else {
 				current.identity = append(current.identity, codonToAmino(runeArray, i))
 				i += 3
 			}
-		}else if i%len(runeArray) == current.start%len(runeArray) {
-			genes<-nil
+		} else if i%len(runeArray) == current.start%len(runeArray) {
+			genes <- nil
 			panic("Never ending gene")
 
 		} else {
@@ -164,7 +172,7 @@ func count(runeArray []rune, genes chan []gene) {
 				inphase = true
 				current.start = i
 				current.identity = append(current.identity, codonToAmino(runeArray, i))
-				i+=3
+				i += 3
 			} else {
 				i++
 			}
