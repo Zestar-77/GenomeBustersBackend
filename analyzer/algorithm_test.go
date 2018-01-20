@@ -17,12 +17,12 @@ import (
 	if reverse[0]=='C'&&reverse[1]=='A'&&reverse[2]=='G'&&reverse[3]=='T' {
 
 	}else{
-		T.Error("Invert failed")
+		T.Error("Reverse failed")
 	}
 	if inverse[0]=='G'&&inverse[1]=='T'&&inverse[2]=='C'&&inverse[3]=='A' {
 
 	}else{
-		T.Error("Invert failed")
+		T.Error("Inverse failed")
 	}
 	}
 	func TestGetOneInSequence(T *testing.T){
