@@ -96,6 +96,13 @@ type Gene struct {
 	Identity []rune `json:"sequence"`
 }
 
+// Genome is a list of genes, that is json serializable for what the frontend expects
+type Genome struct {
+	Genes          []Gene `json:"features"`
+	GenesFound     int    `json:"features_found"`
+	SequenceLength int    `json:"sequence_length"`
+}
+
 func getPermutations(genome []rune) (invert []rune, reverse []rune, inverse []rune) {
 	invert = make([]rune, len(genome))
 	reverse = make([]rune, len(genome))
@@ -125,7 +132,7 @@ func getPermutations(genome []rune) (invert []rune, reverse []rune, inverse []ru
 }
 
 // Thing analyzes the genome and returns found genes.
-func Thing(genome []rune) []Gene {
+func Thing(genome []rune) Genome {
 	gen1 := make(chan []Gene)
 	gen2 := make(chan []Gene)
 	gen3 := make(chan []Gene)
@@ -137,7 +144,8 @@ func Thing(genome []rune) []Gene {
 	go count(invert, gen2, UnknownCounter, UUIDCounter)
 	go count(reverse, gen3, UnknownCounter, UUIDCounter)
 	go count(inverse, gen4, UnknownCounter, UUIDCounter)
-	return append(append(append(<-gen1, <-gen2...), <-gen3...), <-gen4...)
+	genes := append(append(append(<-gen1, <-gen2...), <-gen3...), <-gen4...)
+	return Genome{genes, len(genes), len(genome)}
 }
 
 func count(runeArray []rune, genes chan []Gene, UnknownCounter, UUIDCounter *concurrentCounter) {

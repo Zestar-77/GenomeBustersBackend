@@ -21,9 +21,9 @@ func main() {
 	}
 	port := ":" + strconv.Itoa(v.GetInt("port"))
 
-	http.HandleFunc("/api/gene_search/", webserver.GeneSearch)
 	fileServer := http.FileServer(http.Dir(v.GetString("serverRoot")))
 	http.Handle("/", fileServer)
+	http.HandleFunc("/api/gene_search/", webserver.GeneSearch)
 
 	keyboardInterrupt := make(chan os.Signal, 1)
 	signal.Notify(keyboardInterrupt, os.Interrupt)

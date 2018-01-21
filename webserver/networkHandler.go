@@ -2,6 +2,7 @@ package webserver
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -16,12 +17,12 @@ var isFasta *regexp.Regexp
 var isGenBank *regexp.Regexp
 
 func init() {
-	if reg, err := regexp.Compile("*.\\.[fF][aA][sS][tT]"); err == nil {
+	if reg, err := regexp.Compile(".*\\.[fF][aA][sS][tT]"); err == nil {
 		isFasta = reg
 	} else {
 		panic(err)
 	}
-	if reg, err := regexp.Compile("*.\\.[gG][bG]"); err == nil {
+	if reg, err := regexp.Compile(".*\\.[gG][bG]"); err == nil {
 		isFasta = reg
 	} else {
 		panic(err)
@@ -37,6 +38,7 @@ func GeneSearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer file.Close()
+	var genes analyzer.Genome
 	if !(isFasta.MatchString(header.Filename)) {
 		if !(isGenBank.MatchString(header.Filename)) {
 			fmt.Printf("Could not read uploaded file. Is it a FASTA file?")
@@ -49,7 +51,7 @@ func GeneSearch(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		analyzer.Thing([]rune(genFile.ReadGenome())) // Maybee convert all rune arrays to strings to prevent unneeded memory duplication
+		genes = analyzer.Thing([]rune(genFile.ReadGenome())) // Maybee convert all rune arrays to strings to prevent unneeded memory duplication
 	} else {
 		reader := bufio.NewReader(file)
 		var genome []rune
@@ -57,7 +59,7 @@ func GeneSearch(w http.ResponseWriter, r *http.Request) {
 		for err == nil {
 			var line string
 			line, err = reader.ReadString('\n')
-			if err != nil {
+			if err == nil {
 				genome = append(genome, []rune(strings.TrimSpace(line))...)
 			}
 		}
@@ -66,9 +68,13 @@ func GeneSearch(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		analyzer.Thing(genome)
+		genes = analyzer.Thing(genome)
 	}
 
-	// TODO Upload response
-
+	jsonData, err := json.Marshal(genes)
+	if err != nil {
+		fmt.Printf("Error in json marshelling! %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	w.Write(jsonData)
 }
