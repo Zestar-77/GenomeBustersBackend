@@ -9,7 +9,7 @@ import (
 
 	"github.com/spf13/viper"
 
-	"github.com/GenomeBustersBackend/webserver"
+	"github.com/Zestar-77/GenomeBustersBackend/webserver"
 )
 
 func main() {
