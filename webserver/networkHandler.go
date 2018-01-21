@@ -9,8 +9,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/Zestar-77/GenomeBustersBackend/analyzer"
-	"github.com/Zestar-77/GenomeBustersBackend/specialFileReaders"
+	"GenomeBustersBackend/analyzer"
+	"GenomeBustersBackend/specialFileReaders"
 )
 
 var isFasta *regexp.Regexp
