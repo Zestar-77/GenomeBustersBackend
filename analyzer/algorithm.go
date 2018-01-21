@@ -124,7 +124,8 @@ func getPermutations(genome []rune) (invert []rune, reverse []rune, inverse []ru
 	return
 }
 
-func thing(genome []rune) []Gene {
+// Thing analyzes the genome and returns found genes.
+func Thing(genome []rune) []Gene {
 	gen1 := make(chan []Gene)
 	gen2 := make(chan []Gene)
 	gen3 := make(chan []Gene)
