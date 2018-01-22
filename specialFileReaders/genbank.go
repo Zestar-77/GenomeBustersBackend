@@ -38,7 +38,7 @@ func NewGenebankFile(reader io.Reader) (*GenebankFile, error) {
 			reachedGenome = false
 			continue // End of file
 		}
-		file.genome += strings.TrimSpace(numbers.ReplaceAllString(s.Text(), "")) // Not actually sure if trim space is needed
+		file.genome += strings.ToUpper(strings.TrimSpace(numbers.ReplaceAllString(s.Text(), ""))) // Not actually sure if trim space is needed
 	}
 	return &file, nil
 }

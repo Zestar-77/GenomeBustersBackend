@@ -101,6 +101,7 @@ type Genome struct {
 	Genes          []Gene `json:"features"`
 	GenesFound     int    `json:"features_found"`
 	SequenceLength int    `json:"sequence_length"`
+	Filename       string `json:"filename"`
 }
 
 func getPermutations(genome []rune) (invert []rune, reverse []rune, inverse []rune) {
@@ -145,7 +146,7 @@ func Thing(genome []rune) Genome {
 	go count(reverse, gen3, UnknownCounter, UUIDCounter)
 	go count(inverse, gen4, UnknownCounter, UUIDCounter)
 	genes := append(append(append(<-gen1, <-gen2...), <-gen3...), <-gen4...)
-	return Genome{genes, len(genes), len(genome)}
+	return Genome{genes, len(genes), len(genome), ""}
 }
 
 func count(runeArray []rune, genes chan []Gene, UnknownCounter, UUIDCounter *concurrentCounter) {
