@@ -8,39 +8,7 @@ import (
 	"GenomeBustersBackend/specialFileReaders"
 )
 
-	func TestGetPermutations(T *testing.T){
-	test := [4]rune{'T', 'G', 'A', 'C'}
 
-	invert, reverse, inverse := getPermutations(test[:])
-		if invert[0]=='A'&&invert[1]=='C'&&invert[2]=='T'&&invert[3]=='G' {
-
-	}else{
-		T.Error("Invert failed")
-	}
-	if reverse[0]=='C'&&reverse[1]=='A'&&reverse[2]=='G'&&reverse[3]=='T' {
-
-	}else{
-		T.Error("Reverse failed")
-	}
-	if inverse[0]=='G'&&inverse[1]=='T'&&inverse[2]=='C'&&inverse[3]=='A' {
-
-	}else{
-		T.Error("Inverse failed")
-	}
-	}
-	func TestGetOneInSequence(T *testing.T){
-		test := [11]rune{'A', 'T', 'G', 'C', 'T', 'T', 'T', 'G', 'A', 'A','A'}
-		gen1 := make(chan []Gene)
-
-		go count(test[:],gen1, &concurrentCounter{}, &concurrentCounter{})
-		temp:= <- gen1
-		if temp[0].Start!=0 {
-			T.Error("incorrect Start")
-		}
-		if temp[0].End!=6 {
-			T.Error("incorrect End")
-		}
-	}
 func TestGetOneInSequenceStartOverEnd(T *testing.T){
 	test := [11]rune{ 'C', 'T', 'T', 'T', 'G', 'A', 'A','A', 'A', 'T', 'G'}
 	gen1 := make(chan []Gene)
@@ -192,7 +160,7 @@ func TestGenesInPhase(T *testing.T){
 func BenchmarkThing(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		file, err :=os.Open("../sequence.gb");
+		file, err :=os.Open("../Bs-916.gb")
 		if err != nil{
 			panic(err)
 		}
@@ -200,8 +168,11 @@ func BenchmarkThing(b *testing.B) {
 		testFile, err := specialFileReaders.NewGenebankFile(reader)
 		testGenome := []rune(testFile.ReadGenome())
 
-		Thing(testGenome)
-
+		this := Thing(testGenome)
+		this.GenesFound++
+		this.GenesFound--
+		j := 0
+		j++
 
 	}
 }
@@ -234,20 +205,6 @@ func BenchmarkGenBankIn(b *testing.B){
 		testFile, err := specialFileReaders.NewGenebankFile(reader)
 		testGenome := []rune(testFile.ReadGenome())
 		testGenome[0]='A'
-
-	}
-}
-func BenchmarkPermutations(b *testing.B){
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		file, err :=os.Open("../sequence.gb");
-		if err != nil{
-			panic(err)
-		}
-		reader := bufio.NewReader(file)
-		testFile, err := specialFileReaders.NewGenebankFile(reader)
-		testGenome := []rune(testFile.ReadGenome())
-		getPermutations(testGenome)
 
 	}
 }

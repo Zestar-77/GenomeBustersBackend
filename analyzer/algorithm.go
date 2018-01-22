@@ -2,6 +2,7 @@ package analyzer
 
 import (
 	"strconv"
+	"math"
 )
 
 //import "fmt"
@@ -18,7 +19,7 @@ var codonMap = map[string]rune{
 	"ATT": 'I',
 	"ATC": 'I',
 	"ATA": 'I',
-	"AUG": 'M',
+	"ATG": 'M',
 	"GTT": 'V',
 	"GTC": 'V',
 	"GTA": 'V',
@@ -104,48 +105,17 @@ type Genome struct {
 	Filename       string `json:"filename"`
 }
 
-func getPermutations(genome []rune) (invert []rune, reverse []rune, inverse []rune) {
-	invert = make([]rune, len(genome))
-	reverse = make([]rune, len(genome))
-	inverse = make([]rune, len(genome))
-	for i, v := range genome {
-		switch v {
-		case 'T':
-			invert[i] = 'A'
-			inverse[len(genome)-1-i] = 'A'
-			break
-		case 'G':
-			invert[i] = 'C'
-			inverse[len(genome)-1-i] = 'C'
-			break
-		case 'A':
-			invert[i] = 'T'
-			inverse[len(genome)-1-i] = 'T'
-			break
-		case 'C':
-			invert[i] = 'G'
-			inverse[len(genome)-1-i] = 'G'
-			break
-		}
-		reverse[len(genome)-1-i] = v
-	}
-	return
-}
+
 
 // Thing analyzes the genome and returns found genes.
 func Thing(genome []rune) Genome {
-	gen1 := make(chan []Gene)
-	gen2 := make(chan []Gene)
-	gen3 := make(chan []Gene)
-	gen4 := make(chan []Gene)
+	gen := make(chan []Gene)
+
 	UnknownCounter := &concurrentCounter{}
 	UUIDCounter := &concurrentCounter{}
-	go count(genome, gen1, UnknownCounter, UUIDCounter)
-	invert, reverse, inverse := getPermutations(genome)
-	go count(invert, gen2, UnknownCounter, UUIDCounter)
-	go count(reverse, gen3, UnknownCounter, UUIDCounter)
-	go count(inverse, gen4, UnknownCounter, UUIDCounter)
-	genes := append(append(append(<-gen1, <-gen2...), <-gen3...), <-gen4...)
+	go count(genome, gen, UnknownCounter, UUIDCounter)
+
+	genes := <-gen
 	return Genome{genes, len(genes), len(genome), ""}
 }
 
@@ -154,7 +124,7 @@ func count(runeArray []rune, genes chan []Gene, UnknownCounter, UUIDCounter *con
 	inphase := false
 	temp := '0'
 	temp2 := '0'
-
+	sum := 0
 	unk := UnknownCounter.addAndGetCount()
 	current := Gene{UUIDCounter.addAndGetCount(), -1, -1, "unat" + strconv.Itoa(unk), nil}
 
@@ -165,15 +135,19 @@ func count(runeArray []rune, genes chan []Gene, UnknownCounter, UUIDCounter *con
 		if inphase && current.Start%len(runeArray) != i%len(runeArray) {
 			if runeArray[i%len(runeArray)] == 'T' && ((temp == 'A' && (temp2 == 'A' || temp2 == 'G')) || (temp == 'G' && temp2 == 'A')) {
 				inphase = false
-				current.End = i % len(runeArray)
-				i = current.Start + 1
-				current.Start = current.Start % len(runeArray)
-				geneStore = append(geneStore, current)
+				if i-current.Start>68 {
+					current.End = i % len(runeArray)
+					sum = sum + int(math.Abs(float64(i-current.Start)))
 
-				//fmt.Println(current.start, " ", current.end)
-				// TODO Get actual gene label
-				unk = UnknownCounter.addAndGetCount()
-				current = Gene{UUIDCounter.addAndGetCount(), -1, -1, "unat" + strconv.Itoa(unk), nil}
+					current.Start = current.Start % len(runeArray)
+					// TODO Get actual gene label
+					current.Label="unat" + strconv.Itoa(UnknownCounter.addAndGetCount())
+					current.UUID=UUIDCounter.addAndGetCount()
+					geneStore = append(geneStore, current)
+				}else{
+					i = current.Start + 1
+				}
+				current = Gene{0, -1, -1, "", nil}
 			} else {
 				current.Identity = append(current.Identity, codonToAmino(runeArray, i))
 				i += 3
@@ -190,9 +164,11 @@ func count(runeArray []rune, genes chan []Gene, UnknownCounter, UUIDCounter *con
 				i += 3
 			} else {
 				i++
+				//looking for start codon
 			}
 		}
 	}
+
 	genes <- geneStore
 
 }
