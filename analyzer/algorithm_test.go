@@ -223,3 +223,31 @@ func BenchmarkCount(b *testing.B){
 
 	}
 }
+func BenchmarkGenBankIn(b *testing.B){
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		file, err :=os.Open("../sequence.gb");
+		if err != nil{
+			panic(err)
+		}
+		reader := bufio.NewReader(file)
+		testFile, err := specialFileReaders.NewGenebankFile(reader)
+		testGenome := []rune(testFile.ReadGenome())
+		testGenome[0]='A'
+
+	}
+}
+func BenchmarkPermutations(b *testing.B){
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		file, err :=os.Open("../sequence.gb");
+		if err != nil{
+			panic(err)
+		}
+		reader := bufio.NewReader(file)
+		testFile, err := specialFileReaders.NewGenebankFile(reader)
+		testGenome := []rune(testFile.ReadGenome())
+		getPermutations(testGenome)
+
+	}
+}
