@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 
+	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
@@ -25,15 +26,17 @@ func main() {
 	port := ":" + strconv.Itoa(v.GetInt("port"))
 	apiport := ":" + strconv.Itoa(v.GetInt("apiPort"))
 
-	fmt.Println("Rebuilding Frontend")
-	configureFrontend(v)
-	npmBuild := exec.Command("npm", "run-script", "build")
-	npmBuild.Dir = v.GetString("serverRoot")
-	npmBuild.Stderr = os.Stderr
-	if err = npmBuild.Run(); err != nil {
-		panic(err)
+	if !v.GetBool("skipRebuild") {
+		fmt.Println("Rebuilding Frontend")
+		configureFrontend(v)
+		npmBuild := exec.Command("npm", "run-script", "build")
+		npmBuild.Dir = v.GetString("serverRoot")
+		npmBuild.Stderr = os.Stderr
+		if err = npmBuild.Run(); err != nil {
+			panic(err)
+		}
+		fmt.Println("Frontend rebuilt")
 	}
-	fmt.Println("Frontend rebuilt")
 
 	fileServer := http.FileServer(http.Dir(v.GetString("serverRoot") + "/build"))
 	// fh := http.Handle("/", fileServer)
@@ -58,6 +61,7 @@ func main() {
 		}
 	}()
 
+	fmt.Printf("Server running on port %d, with api on port %d\n", v.GetInt("port"), v.GetInt("apiPort"))
 	<-keyboardInterrupt
 	fmt.Printf("\nShutting Down Server...\n")
 	if err := server.Shutdown(nil); err != nil {
@@ -88,11 +92,14 @@ func configureFrontend(v *viper.Viper) {
 }
 
 func initializeConfiguration() (*viper.Viper, error) {
+	flag.Int("apiPort", 8080, "Overids the configuration files port for")
+	flag.Bool("skipRebuild", false, "Skips rebuilding the frontend")
+	flag.String("serverRoot", "./GenomeBusters/polymorphs-frontend-master", "Sets the location of the front end source code root")
+	flag.Int("port", 80, "Sets the listening port for the server")
+	flag.String("apiAddress", "127.0.0.1", "Address for the api server the front end should look for")
+	flag.Parse()
 	v := viper.New()
-	v.SetDefault("serverRoot", "./GenomeBusters/polymorphs-frontend-master")
-	v.SetDefault("port", 80)
-	v.SetDefault("apiPort", 8080)
-	v.SetDefault("apiAddress", "127.0.0.1")
+	v.BindPFlags(flag.CommandLine)
 	err := readInConfig(v)
 	return v, err
 }
