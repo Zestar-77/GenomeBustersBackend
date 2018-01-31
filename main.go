@@ -67,6 +67,9 @@ func main() {
 	if err := server.Shutdown(nil); err != nil {
 		fmt.Printf("Error: %s", err)
 	}
+	if err := apiServer.Shutdown(nil); err != nil {
+		fmt.Printf("Error: %s", err)
+	}
 	fmt.Printf("Goodbye!\n")
 }
 
@@ -80,10 +83,12 @@ func configureFrontend(v *viper.Viper) {
 	for i, line := range lines {
 		words := strings.Fields(line)
 
-		switch words[0] {
-		case "address:":
-			lines[i] = "address: \"" + v.GetString("apiAddress") + ":" + strconv.Itoa(v.GetInt("apiPort")) + "/api/gene_search\","
-			break
+		if len(words) >= 2 {
+			switch words[1] {
+			case "address":
+				lines[i] = "    static address = \"" + v.GetString("apiAddress") + ":" + strconv.Itoa(v.GetInt("apiPort")) + "/api/gene_search\";"
+				break
+			}
 		}
 	}
 	if err := ioutil.WriteFile(filePath, []byte(strings.Join(lines, "\n")), 0644); err != nil {
