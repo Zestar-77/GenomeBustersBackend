@@ -125,8 +125,9 @@ func TestGeneCount(T *testing.T){
 	                  'A', 'T', 'G', 'T', 'A', 'A',
 	                  'A', 'A', 'A', 'A'}
 	gen1 := make(chan []Gene)
-
-	go count(test[:],gen1, &concurrentCounter{}, &concurrentCounter{})
+	cc1 :=&concurrentCounter{}
+	cc2 :=&concurrentCounter{}
+	go count(test[:],gen1, cc1, cc2)
 	temp:= <- gen1
 	if len(temp)!=5{
 		T.Error("there should 5 genes")
@@ -137,8 +138,28 @@ func TestGeneCount(T *testing.T){
 		}
 	}
 }
+func TestGeneCountWithMinLength(T *testing.T){
+	test := [37]rune{ 'A', 'T', 'G', 'T', 'A', 'A',
+		'A', 'T', 'G','A', 'T', 'G', 'T', 'A', 'A',
+		'A', 'T', 'G', 'T', 'A', 'A',
+		'A', 'T', 'G', 'T', 'A', 'A',
+		'A', 'T', 'G', 'T', 'A', 'A',
+		'A', 'A', 'A', 'A'}
+	gen1 := make(chan []Gene)
+	cc1 :=&concurrentCounter{}
+	cc2 :=&concurrentCounter{}
+	minLength=5
+	go count(test[:],gen1, cc1, cc2)
+	temp:= <- gen1
+	if len(temp)!=1{
+		T.Error("there should 1 gene"+strconv.Itoa(len(temp)))
+	}
+
+}
 
 func TestGenesInPhase(T *testing.T){
+	minLength=0
+
 	test := [34]rune{'A', 'T', 'G', 'T', 'A', 'A', 'A',
 					 'A', 'T', 'G', 'T', 'A', 'A', 'A',
 					 'A', 'T', 'G', 'T', 'A', 'A',
@@ -148,7 +169,7 @@ func TestGenesInPhase(T *testing.T){
 	go count(test[:],gen1, &concurrentCounter{}, &concurrentCounter{})
 	temp:= <- gen1
 	if len(temp)!=3{
-		T.Error("there should 5 genes")
+		T.Error("there should 3 genes")
 	}
 	for i := 0; i<3; i++ {
 		if i+1!= temp[i].UUID{
@@ -160,7 +181,7 @@ func TestGenesInPhase(T *testing.T){
 func BenchmarkThing(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		file, err :=os.Open("../Bs-916.gb")
+		file, err :=os.Open("../Bs-168.gb")
 		if err != nil{
 			panic(err)
 		}
@@ -168,7 +189,7 @@ func BenchmarkThing(b *testing.B) {
 		testFile, err := specialFileReaders.NewGenebankFile(reader)
 		testGenome := []rune(testFile.ReadGenome())
 
-		this := Thing(testGenome)
+		this := Analyze(testGenome)
 		this.GenesFound++
 		this.GenesFound--
 		j := 0

@@ -76,7 +76,7 @@ var codonMap = map[string]rune{
 	"GGA": 'G',
 	"GGG": 'G',
 }
-
+var minLength =0
 func codonToAmino(local []rune, si int) rune {
 	var ret rune
 	st := si % len(local)
@@ -108,13 +108,12 @@ type Genome struct {
 
 
 // Thing analyzes the genome and returns found genes.
-func Thing(genome []rune) Genome {
+func Analyze(genome []rune) Genome {
 	gen := make(chan []Gene)
 
 	UnknownCounter := &concurrentCounter{}
 	UUIDCounter := &concurrentCounter{}
 	go count(genome, gen, UnknownCounter, UUIDCounter)
-
 	genes := <-gen
 	return Genome{genes, len(genes), len(genome), ""}
 }
@@ -125,8 +124,8 @@ func count(runeArray []rune, genes chan []Gene, UnknownCounter, UUIDCounter *con
 	temp := '0'
 	temp2 := '0'
 	sum := 0
-	unk := UnknownCounter.addAndGetCount()
-	current := Gene{UUIDCounter.addAndGetCount(), -1, -1, "unat" + strconv.Itoa(unk), nil}
+	unk := UnknownCounter.count
+	current := Gene{UUIDCounter.count, -1, -1, "unat" + strconv.Itoa(unk), nil}
 
 	//3 is codon length this does not change, 1 and 2 are checking the entirety of the codon
 	for i := 0; i < len(runeArray) || inphase; {
@@ -135,7 +134,7 @@ func count(runeArray []rune, genes chan []Gene, UnknownCounter, UUIDCounter *con
 		if inphase && current.Start%len(runeArray) != i%len(runeArray) {
 			if runeArray[i%len(runeArray)] == 'T' && ((temp == 'A' && (temp2 == 'A' || temp2 == 'G')) || (temp == 'G' && temp2 == 'A')) {
 				inphase = false
-				if i-current.Start>68 {
+				if i-current.Start>minLength {
 					current.End = i % len(runeArray)
 					sum = sum + int(math.Abs(float64(i-current.Start)))
 
