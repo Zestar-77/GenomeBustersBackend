@@ -154,9 +154,9 @@ func TestGeneCountWithMinLength(T *testing.T){
 
 }
 
+
 func TestGenesInPhase(T *testing.T) {
-func TestGenesInPhase(T *testing.T){
-	minLength=0
+	minLength = 0
 
 	test := [34]rune{'A', 'T', 'G', 'T', 'A', 'A', 'A',
 		'A', 'T', 'G', 'T', 'A', 'A', 'A',
@@ -168,23 +168,22 @@ func TestGenesInPhase(T *testing.T){
 	temp := <-gen1
 	if len(temp) != 3 {
 		T.Error("there should 3 genes")
-	go count(test[:],gen1, &concurrentCounter{}, &concurrentCounter{})
-	temp:= <- gen1
-	if len(temp)!=3{
-		T.Error("there should 3 genes")
-	}
-	for i := 0; i < 3; i++ {
-		if i+1 != temp[i].UUID {
-			T.Error("Inccorect UUID on Element " + strconv.Itoa(i) + " of " + strconv.Itoa(temp[i].UUID))
+		go count(test[:], gen1, &concurrentCounter{}, &concurrentCounter{}, 0)
+		temp := <-gen1
+		if len(temp) != 3 {
+			T.Error("there should 3 genes")
+		}
+		for i := 0; i < 3; i++ {
+			if i+1 != temp[i].UUID {
+				T.Error("Inccorect UUID on Element " + strconv.Itoa(i) + " of " + strconv.Itoa(temp[i].UUID))
+			}
 		}
 	}
 }
-
 func BenchmarkThing(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		file, err :=os.Open("../Bs-168.gb")
-		if err != nil{
+
 		file, err := os.Open("../Bs-916.gb")
 		if err != nil {
 			panic(err)
