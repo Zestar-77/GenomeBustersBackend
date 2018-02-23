@@ -1,8 +1,8 @@
 package analyzer
 
 import (
-	"strconv"
 	"math"
+	"strconv"
 )
 
 //import "fmt"
@@ -105,21 +105,19 @@ type Genome struct {
 	Filename       string `json:"filename"`
 }
 
-
-
 // Thing analyzes the genome and returns found genes.
 func Thing(genome []rune) Genome {
 	gen := make(chan []Gene)
 
 	UnknownCounter := &concurrentCounter{}
 	UUIDCounter := &concurrentCounter{}
-	go count(genome, gen, UnknownCounter, UUIDCounter)
+	go count(genome, gen, UnknownCounter, UUIDCounter, 68)
 
 	genes := <-gen
 	return Genome{genes, len(genes), len(genome), ""}
 }
 
-func count(runeArray []rune, genes chan []Gene, UnknownCounter, UUIDCounter *concurrentCounter) {
+func count(runeArray []rune, genes chan []Gene, UnknownCounter, UUIDCounter *concurrentCounter, minLength int) {
 	geneStore := make([]Gene, 0)
 	inphase := false
 	temp := '0'
@@ -135,16 +133,16 @@ func count(runeArray []rune, genes chan []Gene, UnknownCounter, UUIDCounter *con
 		if inphase && current.Start%len(runeArray) != i%len(runeArray) {
 			if runeArray[i%len(runeArray)] == 'T' && ((temp == 'A' && (temp2 == 'A' || temp2 == 'G')) || (temp == 'G' && temp2 == 'A')) {
 				inphase = false
-				if i-current.Start>68 {
+				if i-current.Start > minLength {
 					current.End = i % len(runeArray)
 					sum = sum + int(math.Abs(float64(i-current.Start)))
 
 					current.Start = current.Start % len(runeArray)
 					// TODO Get actual gene label
-					current.Label="unat" + strconv.Itoa(UnknownCounter.addAndGetCount())
-					current.UUID=UUIDCounter.addAndGetCount()
+					current.Label = "unat" + strconv.Itoa(UnknownCounter.addAndGetCount())
+					current.UUID = UUIDCounter.addAndGetCount()
 					geneStore = append(geneStore, current)
-				}else{
+				} else {
 					i = current.Start + 1
 				}
 				current = Gene{0, -1, -1, "", nil}
