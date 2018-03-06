@@ -1,12 +1,11 @@
 package analyzer
 
-import "fmt"
+import (
+	"math"
+	"strconv"
+)
 
-/**
-local:= array
-si= start index
-int le= array length for loop back
-*/
+//import "fmt"
 
 var codonMap = map[string]rune{
 	"TTT": 'F',
@@ -20,7 +19,7 @@ var codonMap = map[string]rune{
 	"ATT": 'I',
 	"ATC": 'I',
 	"ATA": 'I',
-	"AUG": 'M',
+	"ATG": 'M',
 	"GTT": 'V',
 	"GTC": 'V',
 	"GTA": 'V',
@@ -77,81 +76,99 @@ var codonMap = map[string]rune{
 	"GGA": 'G',
 	"GGG": 'G',
 }
-
-func codonToAmino(local []rune, si int, le int) rune {
+var minLength =0
+func codonToAmino(local []rune, si int) rune {
 	var ret rune
-	st := si % le
-	su := (si + 1) % le
-	sv := (si + 2) % le
+	st := si % len(local)
+	su := (si + 1) % len(local)
+	sv := (si + 2) % len(local)
 	var codon string
 	codon = string(local[st]) + string(local[su]) + string(local[sv])
 	ret = codonMap[codon]
 	return ret
 }
 
-type gene struct {
-	start    int
-	end      int
-	identity []rune
+// Gene is a struct that holds information about a gene. Upmost Care must be taken when initializing this.
+type Gene struct {
+	UUID     int    `json:"id"`
+	Start    int    `json:"start"`
+	End      int    `json:"end"`
+	Label    string `json:"label"`
+	Identity []rune `json:"sequence"`
 }
 
-func thing(genome []rune, arrayLength int) []gene {
-	genome2 := make([]rune, arrayLength)
-	for i := 0; i < arrayLength; i++ {
-		switch genome[i] {
-		case 'T':
-			genome2[i] = 'A'
-			break
-		case 'G':
-			genome2[i] = 'C'
-			break
-		case 'A':
-			genome2[i] = 'T'
-			break
-		case 'C':
-			genome2[i] = 'G'
-			break
-		}
-	}
-	gen1 := count(genome, arrayLength)
-	gen2 := count(genome2, arrayLength)
-	return append(gen1, gen2...)
-
+// Genome is a list of genes, that is json serializable for what the frontend expects
+type Genome struct {
+	Genes          []Gene `json:"features"`
+	GenesFound     int    `json:"features_found"`
+	SequenceLength int    `json:"sequence_length"`
+	Filename       string `json:"filename"`
 }
 
-func count(runeArray []rune, arrayLength int) []gene {
-	//srand(time(nullptr))
 
-	var geneStore []gene
-	genePosition := 0
+
+// Thing analyzes the genome and returns found genes.
+func Analyze(genome []rune) Genome {
+	gen := make(chan []Gene)
+
+	UnknownCounter := &concurrentCounter{}
+	UUIDCounter := &concurrentCounter{}
+	go count(genome, gen, UnknownCounter, UUIDCounter, 68)
+
+	genes := <-gen
+	return Genome{genes, len(genes), len(genome), ""}
+}
+
+func count(runeArray []rune, genes chan []Gene, UnknownCounter, UUIDCounter *concurrentCounter, minLength int) {
+	geneStore := make([]Gene, 0)
 	inphase := false
 	temp := '0'
 	temp2 := '0'
-	current := gene{0, 0, nil}
+	sum := 0
+	unk := UnknownCounter.count
+	current := Gene{UUIDCounter.count, -1, -1, "unat" + strconv.Itoa(unk), nil}
+
 	//3 is codon length this does not change, 1 and 2 are checking the entirety of the codon
-	for i := 0; i < arrayLength+3 || inphase; {
-		temp = runeArray[i%arrayLength+1]
-		temp2 = runeArray[i%arrayLength+2]
-		if inphase {
-			if runeArray[i%arrayLength] == 'T' && ((temp == 'A' && (temp2 == 'A' || temp2 == 'G')) || (temp == 'G' && temp2 == 'A')) {
+	for i := 0; i < len(runeArray) || inphase; {
+		temp = runeArray[(i+1)%len(runeArray)]
+		temp2 = runeArray[(i+2)%len(runeArray)]
+		if inphase && current.Start%len(runeArray) != i%len(runeArray) {
+			if runeArray[i%len(runeArray)] == 'T' && ((temp == 'A' && (temp2 == 'A' || temp2 == 'G')) || (temp == 'G' && temp2 == 'A')) {
 				inphase = false
-				current.end = i
-				geneStore[genePosition] = current
-				i = current.start + 1
-				fmt.Println(current.start, " ", current.end)
-				current = gene{0, 0, nil}
+				if i-current.Start>minLength {
+					current.End = i % len(runeArray)
+					sum = sum + int(math.Abs(float64(i-current.Start)))
+
+					current.Start = current.Start % len(runeArray)
+					// TODO Get actual gene label
+					current.Label = "unat" + strconv.Itoa(UnknownCounter.addAndGetCount())
+					current.UUID = UUIDCounter.addAndGetCount()
+					geneStore = append(geneStore, current)
+				} else {
+					i = current.Start + 1
+				}
+				current = Gene{0, -1, -1, "", nil}
 			} else {
-				current.identity = append(current.identity, codonToAmino(runeArray, genePosition, arrayLength))
+				current.Identity = append(current.Identity, codonToAmino(runeArray, i))
 				i += 3
 			}
+		} else if i%len(runeArray) == current.Start%len(runeArray) {
+			genes <- nil
+			panic("Never ending gene")
+
 		} else {
-			if runeArray[i%arrayLength] == 'A' && temp == 'T' && temp2 == 'G' {
+			if runeArray[i%len(runeArray)] == 'A' && temp == 'T' && temp2 == 'G' {
 				inphase = true
-				current.start = i
+				current.Start = i
+				current.Identity = append(current.Identity, codonToAmino(runeArray, i))
+				i += 3
 			} else {
 				i++
+				//looking for start codon
 			}
 		}
 	}
-	return geneStore
+
+	genes <- geneStore
+
 }
