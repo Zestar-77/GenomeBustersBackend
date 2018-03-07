@@ -59,7 +59,7 @@ func GeneSearch(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		fmt.Printf("Analyzing uploaded genbank\n")
-		genes = analyzer.Thing([]rune(genFile.ReadGenome())) // Maybee convert all rune arrays to strings to prevent unneeded memory duplication
+		genes = analyzer.Analyze([]rune(genFile.ReadGenome())) // Maybee convert all rune arrays to strings to prevent unneeded memory duplication
 	} else {
 		fmt.Printf("file is fasta")
 		reader := bufio.NewReader(file)
@@ -78,7 +78,7 @@ func GeneSearch(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		fmt.Printf("Analyzing uploaded fasfa\n")
-		genes = analyzer.Thing(genome)
+		genes = analyzer.Analyze(genome)
 	}
 
 	w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
