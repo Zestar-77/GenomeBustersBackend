@@ -2,8 +2,10 @@ package main
 
 import (
 	cnf "GenomeBustersBackend/configurationHandler"
+	"GenomeBustersBackend/genedatabase"
+	"GenomeBustersBackend/interactive"
 	"GenomeBustersBackend/webserver"
-	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -11,12 +13,8 @@ import (
 )
 
 func main() {
-	v, err := cnf.GetConfig()
-	if err != nil {
-		fmt.Printf("unable to parse config file %s", err)
-		return
-	}
-	fmt.Println("Starting Busted")
+	v := cnf.GetConfig()
+	log.Println("Starting Busted")
 	port := ":" + strconv.Itoa(v.GetInt("port"))
 	apiport := ":" + strconv.Itoa(v.GetInt("apiPort"))
 
@@ -27,10 +25,17 @@ func main() {
 	keyboardInterrupt := make(chan os.Signal, 1)
 	signal.Notify(keyboardInterrupt, os.Interrupt)
 
+	closeDB, err := geneDatabase.InitializeDatabase()
+	if err != nil {
+		log.Printf("Unable to open gene database: %v\nAll genes will be marked unat\n", err)
+	} else {
+		defer closeDB()
+	}
+
 	server := &http.Server{Addr: port, Handler: fileServer}
 	go func() {
 		if err := server.ListenAndServe(); err != nil {
-			fmt.Printf("Error: %s", err)
+			log.Printf("Error: %s", err)
 			keyboardInterrupt <- nil
 		}
 	}()
@@ -38,19 +43,25 @@ func main() {
 	apiServer := &http.Server{Addr: apiport, Handler: http.HandlerFunc(webserver.GeneSearch)}
 	go func() {
 		if err := apiServer.ListenAndServe(); err != nil {
-			fmt.Printf("Error: %s", err)
+			log.Printf("Error: %s\n", err)
 			keyboardInterrupt <- nil
 		}
 	}()
 
-	fmt.Printf("Server running on port %d, with api on port %d\n", v.GetInt("port"), v.GetInt("apiPort"))
-	<-keyboardInterrupt
-	fmt.Printf("\nShutting Down Server...\n")
+	log.Printf("Server running on port %d, with api on port %d\n", v.GetInt("port"), v.GetInt("apiPort"))
+
+	if v.GetBool("LogToConsole") {
+		if err := interactive.RunTui(keyboardInterrupt); err != nil {
+			<-keyboardInterrupt
+		}
+	}
+
+	log.Printf("\nShutting Down Server...\n")
 	if err := server.Shutdown(nil); err != nil {
-		fmt.Printf("Error: %s", err)
+		log.Printf("Error: %s", err)
 	}
 	if err := apiServer.Shutdown(nil); err != nil {
-		fmt.Printf("Error: %s", err)
+		log.Printf("Error: %s", err)
 	}
-	fmt.Printf("Goodbye!\n")
+	log.Printf("Goodbye!\n")
 }

@@ -3,8 +3,8 @@ package webserver
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"regexp"
 	"strings"
@@ -35,33 +35,33 @@ type dataWrapper struct {
 
 // GeneSearch handles an uploaded fasta file and handles searching.
 func GeneSearch(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("Incoming file\n")
+	log.Printf("Incoming file\n")
 	file, header, err := r.FormFile("file")
 	if err != nil {
-		fmt.Printf("Could not read uploaded file. Is it a FASTA file\n?")
+		log.Printf("Could not read uploaded file. Is it a FASTA file\n?")
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	defer file.Close()
-	fmt.Printf("Filename is \"%s\"\n", header.Filename)
+	log.Printf("Filename is \"%s\"\n", header.Filename)
 	var genes analyzer.Genome
 	if !(isFasta.MatchString(header.Filename)) {
 		if !(isGenBank.MatchString(header.Filename)) {
-			fmt.Printf("Could not read uploaded file. Is it a FASTA file?\n")
+			log.Printf("Could not read uploaded file. Is it a FASTA file?\n")
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		fmt.Printf("File is genbank\n")
+		log.Printf("File is genbank\n")
 		genFile, err := specialFileReaders.NewGenebankFile(file)
 		if err != nil {
-			fmt.Printf("could not read uploaded file\n")
+			log.Printf("could not read uploaded file\n")
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		fmt.Printf("Analyzing uploaded genbank\n")
-		genes = analyzer.Thing([]rune(genFile.ReadGenome())) // Maybee convert all rune arrays to strings to prevent unneeded memory duplication
+		log.Printf("Analyzing uploaded genbank\n")
+		genes = analyzer.Analyze([]rune(genFile.ReadGenome())) // Maybee convert all rune arrays to strings to prevent unneeded memory duplication
 	} else {
-		fmt.Printf("file is fasta")
+		log.Printf("file is fasta")
 		reader := bufio.NewReader(file)
 		var genome []rune
 		reader.ReadBytes('\n')
@@ -73,12 +73,12 @@ func GeneSearch(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if err != io.EOF {
-			fmt.Printf("Could not read uploaded file. Is it a FASTA file?\n")
+			log.Printf("Could not read uploaded file. Is it a FASTA file?\n")
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		fmt.Printf("Analyzing uploaded fasfa\n")
-		genes = analyzer.Thing(genome)
+		log.Printf("Analyzing uploaded fasfa\n")
+		genes = analyzer.Analyze(genome)
 	}
 
 	w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
@@ -86,15 +86,15 @@ func GeneSearch(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Headers",
 		"Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 
-	fmt.Println("Returning file")
+	log.Println("Returning file")
 	genes.Filename = header.Filename
 	template := dataWrapper{genes}
 
 	jsonData, err := json.Marshal(template)
 	if err != nil {
-		fmt.Printf("Error in json marshelling! %v\n", err)
+		log.Printf("Error in json marshelling! %v\n", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	w.Write(jsonData)
-	fmt.Println("done")
+	log.Println("done")
 }
