@@ -2,12 +2,13 @@ package interactive
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
 
 	cnf "GenomeBustersBackend/configurationHandler"
+	"GenomeBustersBackend/genedatabase"
+	"GenomeBustersBackend/global"
 
 	"github.com/c-bata/go-prompt"
 )
@@ -15,12 +16,12 @@ import (
 func printLn(s ...string) {
 	st := strings.Join(s, " ")
 	fmt.Println(st)
-	log.Println(st)
+	global.Log.Println(st)
 }
 
 func printF(format string, i ...interface{}) {
 	fmt.Printf(format, i...)
-	log.Printf(format, i...)
+	global.Log.Printf(format, i...)
 }
 
 func addCommand(args []string) {
@@ -32,15 +33,16 @@ func addCommand(args []string) {
 		} else {
 			for path == "" {
 				path = prompt.Input("[File Path]> ", getFileCompletions)
+				global.Log.Println("[File Path]", path)
 			}
 		}
 
 		if _, err := os.Stat(path); os.IsNotExist(err) {
-			fmt.Println("Specified file does not exist!")
+			printLn("Specified file does not exist!")
 			return
 		}
 
-		// TODO Load genbank file
+		genedatabase.AddGenBank(path)
 
 	default:
 		printF("Unrecognized sub command of add: %s\n", args[0])
@@ -52,7 +54,7 @@ func addCommand(args []string) {
 func RunTui(interupt chan os.Signal) error {
 	for {
 		t := prompt.Input("[]> ", getCompletions)
-		log.Println("[]> ", t)
+		global.Log.Println("[]> ", t)
 		split := strings.Fields(t)
 		if len(split) == 0 {
 			continue
@@ -62,7 +64,7 @@ func RunTui(interupt chan os.Signal) error {
 			return nil
 		case "add": // Pull Genes out of specified
 			if len(split) <= 1 {
-				printF("add requires a subcommand")
+				printF("add requires a subcommand\n")
 			} else {
 				addCommand(split[1:])
 			}
@@ -77,6 +79,10 @@ func RunTui(interupt chan os.Signal) error {
 				printLn("Frontend rebuilt")
 			}
 			break
+		case "echo":
+			if len(split) > 1 {
+				printLn(split[1:]...)
+			}
 		default:
 			printF("Unrecognized command: %s\n", split[0])
 		}

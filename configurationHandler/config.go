@@ -1,6 +1,7 @@
 package configurationHandler
 
 import (
+	"GenomeBustersBackend/global"
 	"io"
 	"io/ioutil"
 	"log"
@@ -24,7 +25,7 @@ func GetConfig() *viper.Viper {
 func init() {
 	//initializeVisualOutput()
 	if !configuration.GetBool("skipRebuild") {
-		log.Println("Rebuilding Frontend")
+		global.Log.Println("Rebuilding Frontend")
 		configureFrontend(configuration)
 		npmBuild := exec.Command("npm", "run-script", "build")
 		npmBuild.Dir = configuration.GetString("serverRoot")
@@ -32,7 +33,7 @@ func init() {
 		if err := npmBuild.Run(); err != nil {
 			panic(err)
 		}
-		log.Println("Frontend rebuilt")
+		global.Log.Println("Frontend rebuilt")
 	}
 }
 
@@ -75,11 +76,11 @@ func initializeConfiguration() *viper.Viper {
 	v.BindPFlags(flag.CommandLine)
 	err := readInConfig(v)
 	if err != nil {
-		log.Fatalf("Unable to parse configurations file or arguments, try \"busted --help\"\n%v", err)
+		global.Log.Fatalf("Unable to parse configurations file or arguments, try \"busted --help\"\n%v", err)
 	}
 
 	if v.GetBool("help") {
-		log.Fatalln(flag.ErrHelp)
+		global.Log.Fatalln(flag.ErrHelp)
 	}
 
 	return v
@@ -96,14 +97,15 @@ func readInConfig(v *viper.Viper) error {
 
 	LogFilePath := v.GetString("LogFile")
 	LogFile, err := os.Create(LogFilePath)
-	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
 	if err != nil {
+		global.Log = log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lmicroseconds)
 		log.Fatalf("Unable to open log file at %s:\n\t%v", LogFilePath, err)
-	}
-	if v.GetBool("LogToConsole") {
-		log.SetOutput(io.MultiWriter(LogFile, os.Stderr))
 	} else {
-		log.SetOutput(LogFile)
+		if v.GetBool("LogToConsole") {
+			global.Log = log.New(io.MultiWriter(LogFile, os.Stderr), "", log.Ldate|log.Ltime|log.Lmicroseconds)
+		} else {
+			global.Log = log.New(LogFile, "", log.Ldate|log.Ltime|log.Lmicroseconds)
+		}
 	}
 
 	return v.ReadInConfig()
