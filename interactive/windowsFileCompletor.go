@@ -35,5 +35,5 @@ func getFileCompletions(d prompt.Document) []prompt.Suggest {
 		}
 	}
 
-	return suggestions
+	return prompt.FilterContains(suggestions, d.GetWordBeforeCursor(), true)
 }

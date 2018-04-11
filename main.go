@@ -31,7 +31,6 @@ func main() {
 	} else {
 		defer closeDB()
 	}
-	genedatabase.AddGenBank(`sequence.gb`)
 
 	server := &http.Server{Addr: port, Handler: fileServer}
 	go func() {
