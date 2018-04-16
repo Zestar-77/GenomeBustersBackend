@@ -49,7 +49,7 @@ type GenebankFile struct {
 // Gene Represents a gene found in a genebank file
 type Gene struct {
 	Name       string
-	start, end uint
+	start, end int
 	complement bool
 	Sequence   []byte
 }
@@ -128,7 +128,7 @@ func (gf *GenebankFile) finalizeGene(geneData []string) {
 		return
 	}
 
-	g := Gene{Name: name, complement: compliment, start: uint(start), end: uint(end)}
+	g := Gene{Name: name, complement: compliment, start: int(start), end: int(end)}
 	gf.genes.PushBack(g)
 }
 
@@ -137,7 +137,7 @@ func (gf *GenebankFile) finalizeGene(geneData []string) {
 func (gf *GenebankFile) finalizeGeneSequence() {
 	for e := gf.genes.Front(); e != nil; e = e.Next() {
 		g := e.Value.(Gene)
-		if g.start > 0 && g.end > g.start && g.end < (uint)(len(gf.genome)) {
+		if g.start > 0 && g.end > g.start && g.end < (len(gf.genome)) {
 			if (g.end-(g.start-1))%3 == 0 {
 				g.Sequence = codonToAmino(gf.genome[g.start-1:g.end], g.complement)
 			} else if (g.end-g.start-1)%3 == 0 {
@@ -145,6 +145,8 @@ func (gf *GenebankFile) finalizeGeneSequence() {
 			} else {
 				g.Sequence = codonToAmino(gf.genome[g.start:g.end], g.complement)
 			}
+			e.Value = g
+			global.Log.Printf("Gene is length %d, sequence is %v", len(g.Sequence), g.Sequence)
 		} else {
 			log.Printf("GB had an gene that went past the end of the genome.\n")
 
@@ -153,10 +155,10 @@ func (gf *GenebankFile) finalizeGeneSequence() {
 }
 
 func codonToAmino(s string, complement bool) []byte {
-	buffer := bytes.NewBuffer(make([]byte, len(s)/3+1))
+	buffer := bytes.NewBuffer(make([]byte, 0))
 	for i := 0; i < len(s); i += 3 {
 		if !complement {
-			buffer.WriteRune(global.CodonMap[s[i:i+3]])
+			buffer.WriteRune(rune(global.CodonMap[s[i:i+3]]))
 		} else {
 			codonSequence := s[i : i+3]
 			codonSequence = strings.Replace(codonSequence, "t", "A", 0)

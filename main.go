@@ -60,10 +60,10 @@ func main() {
 
 	global.Log.Printf("Shutting Down Server...\n")
 	if err := server.Shutdown(nil); err != nil {
-		global.Log.Printf("Error: %s", err)
+		global.Log.Printf("%s", err)
 	}
 	if err := apiServer.Shutdown(nil); err != nil {
-		global.Log.Printf("Error: %s", err)
+		global.Log.Printf("%s", err)
 	}
 	global.Log.Printf("Goodbye!\n")
 }

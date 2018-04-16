@@ -73,6 +73,7 @@ func count(runeArray []rune, genes chan []Gene, UnknownCounter, UUIDCounter *con
 					// TODO Get actual gene label
 					label := genedatabase.GetGeneLabel([]byte(string(current.Identity)))
 					if label == "" {
+						global.Log.Println(label)
 						label = "unat" + strconv.Itoa(UnknownCounter.addAndGetCount())
 					}
 					current.Label = label

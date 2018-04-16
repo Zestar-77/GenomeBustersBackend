@@ -69,6 +69,8 @@ func RunTui(interupt chan os.Signal) error {
 				addCommand(split[1:])
 			}
 			break
+		case "dump":
+			genedatabase.Dump()
 		case "rui": // Rebuild front end
 			npmBuild := exec.Command("npm", "run-script", "build")
 			npmBuild.Dir = cnf.GetConfig().GetString("serverRoot")
@@ -94,6 +96,7 @@ func getCompletions(d prompt.Document) []prompt.Suggest {
 		{Text: "exit", Description: "End this instance of the server"},
 		{Text: "add gb", Description: "Add genes from a genbank file to the local gene database for lookups"},
 		{Text: "rui", Description: "Rebuild frontend"},
+		{Text: "dump", Description: "Print out the entirety of the database to the console."},
 	}
 	return prompt.FilterHasPrefix(s, d.GetWordBeforeCursor(), true)
 }
