@@ -2,8 +2,10 @@ package main
 
 import (
 	cnf "GenomeBustersBackend/configurationHandler"
+	"GenomeBustersBackend/genedatabase"
+	"GenomeBustersBackend/global"
+	"GenomeBustersBackend/interactive"
 	"GenomeBustersBackend/webserver"
-	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -11,12 +13,8 @@ import (
 )
 
 func main() {
-	v, err := cnf.GetConfig()
-	if err != nil {
-		fmt.Printf("unable to parse config file %s", err)
-		return
-	}
-	fmt.Println("Starting Busted")
+	v := cnf.GetConfig()
+	global.Log.Println("Starting Busted")
 	port := ":" + strconv.Itoa(v.GetInt("port"))
 	apiport := ":" + strconv.Itoa(v.GetInt("apiPort"))
 
@@ -27,10 +25,17 @@ func main() {
 	keyboardInterrupt := make(chan os.Signal, 1)
 	signal.Notify(keyboardInterrupt, os.Interrupt)
 
+	closeDB, err := genedatabase.InitializeDatabase()
+	if err != nil {
+		global.Log.Printf("Unable to open gene database: %v\nAll genes will be marked unat\n", err)
+	} else {
+		defer closeDB()
+	}
+
 	server := &http.Server{Addr: port, Handler: fileServer}
 	go func() {
 		if err := server.ListenAndServe(); err != nil {
-			fmt.Printf("Error: %s", err)
+			global.Log.Printf("Error: %s", err)
 			keyboardInterrupt <- nil
 		}
 	}()
@@ -38,19 +43,27 @@ func main() {
 	apiServer := &http.Server{Addr: apiport, Handler: http.HandlerFunc(webserver.GeneSearch)}
 	go func() {
 		if err := apiServer.ListenAndServe(); err != nil {
-			fmt.Printf("Error: %s", err)
+			global.Log.Printf("Error: %s\n", err)
 			keyboardInterrupt <- nil
 		}
 	}()
 
-	fmt.Printf("Server running on port %d, with api on port %d\n", v.GetInt("port"), v.GetInt("apiPort"))
-	<-keyboardInterrupt
-	fmt.Printf("\nShutting Down Server...\n")
+	global.Log.Printf("Server running on port %d, with api on port %d\n", v.GetInt("port"), v.GetInt("apiPort"))
+
+	if !v.GetBool("LogToConsole") {
+		if err := interactive.RunTui(keyboardInterrupt); err != nil {
+			<-keyboardInterrupt
+		}
+	} else {
+		<-keyboardInterrupt
+	}
+
+	global.Log.Printf("Shutting Down Server...\n")
 	if err := server.Shutdown(nil); err != nil {
-		fmt.Printf("Error: %s", err)
+		global.Log.Printf("%s", err)
 	}
 	if err := apiServer.Shutdown(nil); err != nil {
-		fmt.Printf("Error: %s", err)
+		global.Log.Printf("%s", err)
 	}
-	fmt.Printf("Goodbye!\n")
+	global.Log.Printf("Goodbye!\n")
 }

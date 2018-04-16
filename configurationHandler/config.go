@@ -1,8 +1,10 @@
 package configurationHandler
 
 import (
-	"fmt"
+	"GenomeBustersBackend/global"
+	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"runtime"
@@ -13,40 +15,27 @@ import (
 	"github.com/spf13/viper"
 )
 
-var configuration *viper.Viper
-var err error
+var configuration = initializeConfiguration()
 
 // GetConfig retrives configuration for the server
-func GetConfig() (*viper.Viper, error) {
-	return configuration, err
+func GetConfig() *viper.Viper {
+	return configuration
 }
 
 func init() {
 	//initializeVisualOutput()
-	configuration, err = initializeConfiguration()
 	if !configuration.GetBool("skipRebuild") {
-		fmt.Println("Rebuilding Frontend")
+		global.Log.Println("Rebuilding Frontend")
 		configureFrontend(configuration)
 		npmBuild := exec.Command("npm", "run-script", "build")
 		npmBuild.Dir = configuration.GetString("serverRoot")
 		npmBuild.Stderr = os.Stderr
-		if err = npmBuild.Run(); err != nil {
+		if err := npmBuild.Run(); err != nil {
 			panic(err)
 		}
-		fmt.Println("Frontend rebuilt")
+		global.Log.Println("Frontend rebuilt")
 	}
 }
-
-/*
-func initializeVisualOutput() {
-	err := termui.Init()
-	if err == nil {
-		go visualOut()
-	} else {
-		fmt.Printf("error occurred when initializing termui %v", err)
-	}
-}
-*/
 
 func configureFrontend(v *viper.Viper) {
 	filePath := v.GetString("serverRoot") + "/src/config.js"
@@ -71,17 +60,30 @@ func configureFrontend(v *viper.Viper) {
 	}
 }
 
-func initializeConfiguration() (*viper.Viper, error) {
+func initializeConfiguration() *viper.Viper {
 	flag.Int("apiPort", 8080, "Overids the configuration files port for")
 	flag.Bool("skipRebuild", false, "Skips rebuilding the frontend")
 	flag.String("serverRoot", "./GenomeBusters/polymorphs-frontend-master", "Sets the location of the front end source code root")
 	flag.Int("port", 80, "Sets the listening port for the server")
 	flag.String("apiAddress", "127.0.0.1", "Address for the api server the front end should look for")
+	flag.String("LogFile", "busted.log", "File to save log to. Defaults to './busted.log'")
+	flag.Bool("color-256", true, "Determines whether or not to use 256 colors. Windows consoles do not support this, and as such this will have no effect there. Defaults to true")
+	flag.Bool("LogToConsole", false, "Instead of getting the interactive prompt, print log to stdout. Exit with ^c")
+	flag.Bool("help", false, "Show the help text")
 	flag.Parse()
+
 	v := viper.New()
 	v.BindPFlags(flag.CommandLine)
 	err := readInConfig(v)
-	return v, err
+	if err != nil {
+		global.Log.Fatalf("Unable to parse configurations file or arguments, try \"busted --help\"\n%v", err)
+	}
+
+	if v.GetBool("help") {
+		global.Log.Fatalln(flag.ErrHelp)
+	}
+
+	return v
 }
 
 func readInConfig(v *viper.Viper) error {
@@ -92,5 +94,19 @@ func readInConfig(v *viper.Viper) error {
 		v.AddConfigPath("/etc/busted/")
 	}
 	v.AddConfigPath(".")
+
+	LogFilePath := v.GetString("LogFile")
+	LogFile, err := os.Create(LogFilePath)
+	if err != nil {
+		global.Log = log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lmicroseconds)
+		log.Fatalf("Unable to open log file at %s:\n\t%v", LogFilePath, err)
+	} else {
+		if v.GetBool("LogToConsole") {
+			global.Log = log.New(io.MultiWriter(LogFile, os.Stderr), "", log.Ldate|log.Ltime|log.Lmicroseconds)
+		} else {
+			global.Log = log.New(LogFile, "", log.Ldate|log.Ltime|log.Lmicroseconds)
+		}
+	}
+
 	return v.ReadInConfig()
 }
