@@ -1,3 +1,7 @@
+/*Package specialFileReaders handles reading special files.
+This package should contain functions optimized for reading different formats for gene files
+this includes genbank files
+*/
 package specialFileReaders
 
 import (
@@ -12,10 +16,12 @@ import (
 	"strings"
 )
 
-var numbers *regexp.Regexp
-var geneIndexRange *regexp.Regexp
-var geneName *regexp.Regexp
-var locusTag *regexp.Regexp
+var (
+	numbers        *regexp.Regexp
+	geneIndexRange *regexp.Regexp
+	geneName       *regexp.Regexp
+	locusTag       *regexp.Regexp
+)
 
 func panicIfError(err error) {
 	if err != nil {
@@ -90,6 +96,8 @@ func NewGenebankFile(reader io.Reader) (*GenebankFile, error) {
 	return &file, nil
 }
 
+// complets the information about a given gene from the data at the top of the genbank file.
+// does not, however, complete the gene sequence
 func (gf *GenebankFile) finalizeGene(geneData []string) {
 	r := geneIndexRange.FindStringSubmatch(geneData[0])
 	if len(r) != 3 {
@@ -132,8 +140,8 @@ func (gf *GenebankFile) finalizeGene(geneData []string) {
 	gf.genes.PushBack(g)
 }
 
-// 410 -1750
-
+// finalizeGeneSequence is responsible for looping through the genbank files list of genes
+// and adding their codon sequences
 func (gf *GenebankFile) finalizeGeneSequence() {
 	for e := gf.genes.Front(); e != nil; e = e.Next() {
 		g := e.Value.(Gene)
@@ -154,6 +162,7 @@ func (gf *GenebankFile) finalizeGeneSequence() {
 	}
 }
 
+// codonToAmino takes in a 3 letter codon sequence and returns it as a single letter code from the codon map
 func codonToAmino(s string, complement bool) []byte {
 	buffer := bytes.NewBuffer(make([]byte, 0))
 	for i := 0; i < len(s); i += 3 {

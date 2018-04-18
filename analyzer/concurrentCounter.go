@@ -1,22 +1,18 @@
 package analyzer
 
-import (
-	"sync"
-)
+import "sync/atomic"
 
+// concurrentCounter A struct that has a thread safe counter
 type concurrentCounter struct {
-	count  int
-	locker sync.Mutex
+	count int64
 }
 
+// Returns the current count
 func (c *concurrentCounter) getCount() int {
-	return c.count
+	return int(c.count)
 }
 
+// increments the counter and returns the new value
 func (c *concurrentCounter) addAndGetCount() int {
-	c.locker.Lock()
-	c.count++
-	temp := c.count
-	c.locker.Unlock()
-	return temp
+	return int(atomic.AddInt64(&c.count, 1))
 }

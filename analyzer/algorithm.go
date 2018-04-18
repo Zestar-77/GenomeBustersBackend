@@ -1,3 +1,7 @@
+/*Package analyzer represents a proof of concept algorithm for finding genes
+
+WARNING this algorithm should NOT be considered definitive and its accuracy should be taken with a grain of salt.
+*/
 package analyzer
 
 import (
@@ -9,6 +13,7 @@ import (
 
 var minLength = 1
 
+// codonToAmino takes in a codon sequence and returns a single letter code for it
 func codonToAmino(local []rune, si int) rune {
 	var ret rune
 	st := si % len(local)
@@ -49,14 +54,19 @@ func Analyze(genome []rune) Genome {
 	return Genome{genes, len(genes), len(genome), ""}
 }
 
+// count loops through the genome searching for genes.
+// runeArray is the entire genome
+// UnkownCounter is a concurrent counter used for generating unannotated labels
+// UUIDCounter is a concurrent counter used for generating uuids for genes
+// minLength, if a gene is not > minLength, its assumed to not be a gene
 func count(runeArray []rune, genes chan []Gene, UnknownCounter, UUIDCounter *concurrentCounter, minLength int) {
 	geneStore := make([]Gene, 0)
 	inphase := false
 	temp := '0'
 	temp2 := '0'
 	sum := 0
-	unk := UnknownCounter.count
-	current := Gene{UUIDCounter.count, -1, -1, "unat" + strconv.Itoa(unk), nil}
+	unk := UnknownCounter.getCount()
+	current := Gene{UUIDCounter.getCount(), -1, -1, "unat" + strconv.Itoa(unk), nil}
 
 	//3 is codon length this does not change, 1 and 2 are checking the entirety of the codon
 	for i := 0; i < len(runeArray) || inphase; {

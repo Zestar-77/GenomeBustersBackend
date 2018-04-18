@@ -1,3 +1,8 @@
+/*Package interactive Used for at runtime user control of the server.
+
+This is currently the only supported means of adding to the gene database,
+by telling the server to load in and parse a genebank file
+*/
 package interactive
 
 import (
@@ -13,17 +18,22 @@ import (
 	"github.com/c-bata/go-prompt"
 )
 
+// printLn prints a line to the logger and to the console.
 func printLn(s ...string) {
 	st := strings.Join(s, " ")
 	fmt.Println(st)
 	global.Log.Println(st)
 }
 
+// printF does a formated print to both the console and to the logger
 func printF(format string, i ...interface{}) {
 	fmt.Printf(format, i...)
 	global.Log.Printf(format, i...)
 }
 
+// addCommand is used for adding genes to the database
+// currently, only handles genbank files.
+// Will provide the use with file completions
 func addCommand(args []string) {
 	switch args[0] {
 	case "gb":
@@ -50,7 +60,10 @@ func addCommand(args []string) {
 
 }
 
-// RunTui runs a command prompt
+// RunTui runs a command prompt for user interaction
+// Takes in a channel reading in os.Signal for handling interrupts.
+//
+// warning, this will panic if the server is not run in a command line interface.
 func RunTui(interupt chan os.Signal) error {
 	for {
 		t := prompt.Input("[]> ", getCompletions)
@@ -91,6 +104,8 @@ func RunTui(interupt chan os.Signal) error {
 	}
 }
 
+// getCompletions holds a list of possible commands at the base level of the prompt.
+// This is used for tab completions
 func getCompletions(d prompt.Document) []prompt.Suggest {
 	s := []prompt.Suggest{
 		{Text: "exit", Description: "End this instance of the server"},

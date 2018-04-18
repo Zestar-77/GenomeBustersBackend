@@ -13,9 +13,12 @@ import (
 	"GenomeBustersBackend/specialFileReaders"
 )
 
-var isFasta *regexp.Regexp
-var isGenBank *regexp.Regexp
+var (
+	isFasta   *regexp.Regexp
+	isGenBank *regexp.Regexp
+)
 
+// init compiles necessary gene files
 func init() {
 	if reg, err := regexp.Compile(".*\\.[fF][aA][sS][tT]"); err == nil {
 		isFasta = reg
@@ -34,6 +37,7 @@ type dataWrapper struct {
 }
 
 // GeneSearch handles an uploaded fasta file and handles searching.
+// Returns the request with a json formatted list of genes
 func GeneSearch(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Incoming file\n")
 	file, header, err := r.FormFile("file")

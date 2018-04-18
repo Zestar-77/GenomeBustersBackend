@@ -1,3 +1,11 @@
+/**
+package configurationHandler
+
+This package handles loading in configuration data from .butsted.toml, and command line flags.
+It is also responsible for setting the logger for the project in the global package.
+
+using the pflag and viper libraries for command line options and configuration files
+*/
 package configurationHandler
 
 import (
@@ -15,6 +23,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+// configuration is the object representing the current configuration of the program
+// Its initialization is run at package import time, prior to the init method.
 var configuration = initializeConfiguration()
 
 // GetConfig retrives configuration for the server
@@ -22,6 +32,7 @@ func GetConfig() *viper.Viper {
 	return configuration
 }
 
+// init rebuilds the front end if the configuration states to
 func init() {
 	//initializeVisualOutput()
 	if !configuration.GetBool("skipRebuild") {
@@ -37,6 +48,9 @@ func init() {
 	}
 }
 
+// configureFrontend wull rebuild the /src/config.js file based on the busted.toml file.
+// This way the front end can be forced to respect certian variables for the backend such
+// as port mapping.
 func configureFrontend(v *viper.Viper) {
 	filePath := v.GetString("serverRoot") + "/src/config.js"
 	file, err := ioutil.ReadFile(filePath)
@@ -60,6 +74,9 @@ func configureFrontend(v *viper.Viper) {
 	}
 }
 
+// initializeConfiguration sets up the potential configuration values that can be used, as well as default values for those variables.
+// Generally speaking, if a new configuration option is needed, place it in here prior to "flag.parse()".
+// Note that command line options override config file options
 func initializeConfiguration() *viper.Viper {
 	flag.Int("apiPort", 8080, "Overids the configuration files port for")
 	flag.Bool("skipRebuild", false, "Skips rebuilding the frontend")
@@ -86,6 +103,7 @@ func initializeConfiguration() *viper.Viper {
 	return v
 }
 
+// readInConfig reads in the .busted.toml and applies configuration options.
 func readInConfig(v *viper.Viper) error {
 	v.SetConfigType("toml")
 	v.SetConfigName(".busted")

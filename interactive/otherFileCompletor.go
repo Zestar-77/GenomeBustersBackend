@@ -9,6 +9,7 @@ import (
 	prompt "github.com/c-bata/go-prompt"
 )
 
+// getFileCompletions gets a list of files/directories given the path currently entered by the user
 func getFileCompletions(d prompt.Document) []prompt.Suggest {
 	path := d.Text
 	if len(path) < 1 {
