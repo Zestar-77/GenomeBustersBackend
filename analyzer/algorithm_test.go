@@ -1,7 +1,7 @@
 package analyzer
 
 import (
-	"GenomeBustersBackend/specialFileReaders"
+	"GenomeBustersBackend/specialfilereaders"
 	"bufio"
 	"os"
 	"strconv"
@@ -189,7 +189,7 @@ func BenchmarkThing(b *testing.B) {
 			panic(err)
 		}
 		reader := bufio.NewReader(file)
-		testFile, err := specialFileReaders.NewGenebankFile(reader)
+		testFile, err := specialfilereaders.NewGenebankFile(reader)
 		testGenome := []rune(testFile.ReadGenome())
 
 		this := Analyze(testGenome)
@@ -209,7 +209,7 @@ func BenchmarkCount(b *testing.B) {
 			panic(err)
 		}
 		reader := bufio.NewReader(file)
-		testFile, err := specialFileReaders.NewGenebankFile(reader)
+		testFile, err := specialfilereaders.NewGenebankFile(reader)
 		testGenome := []rune(testFile.ReadGenome())
 		gen1 := make(chan []Gene)
 
@@ -226,7 +226,7 @@ func BenchmarkGenBankIn(b *testing.B) {
 			panic(err)
 		}
 		reader := bufio.NewReader(file)
-		testFile, err := specialFileReaders.NewGenebankFile(reader)
+		testFile, err := specialfilereaders.NewGenebankFile(reader)
 		testGenome := []rune(testFile.ReadGenome())
 		testGenome[0] = 'A'
 

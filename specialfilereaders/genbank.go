@@ -1,4 +1,4 @@
-package specialFileReaders
+package specialfilereaders
 
 import (
 	"GenomeBustersBackend/global"

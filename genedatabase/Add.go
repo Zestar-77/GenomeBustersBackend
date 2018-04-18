@@ -2,7 +2,7 @@ package genedatabase
 
 import (
 	"GenomeBustersBackend/global"
-	"GenomeBustersBackend/specialFileReaders"
+	"GenomeBustersBackend/specialfilereaders"
 	"os"
 
 	"github.com/syndtr/goleveldb/leveldb"
@@ -18,7 +18,7 @@ func AddGenBank(path string) error {
 		return err
 	}
 
-	gbfile, err := specialFileReaders.NewGenebankFile(file)
+	gbfile, err := specialfilereaders.NewGenebankFile(file)
 	if err != nil {
 		global.Log.Printf("Unable to add genes from genbank: %v\n", err)
 		return err
@@ -29,8 +29,8 @@ func AddGenBank(path string) error {
 	counter := 0
 	for e := gbfile.GetGenes().Front(); e != nil; e = e.Next() {
 		counter++
-		global.Log.Printf("Count %d, Label: %s, sequence: %v", counter, e.Value.(specialFileReaders.Gene).Name, e.Value.(specialFileReaders.Gene).Sequence)
-		gene := e.Value.(specialFileReaders.Gene)
+		global.Log.Printf("Count %d, Label: %s, sequence: %v", counter, e.Value.(specialfilereaders.Gene).Name, e.Value.(specialfilereaders.Gene).Sequence)
+		gene := e.Value.(specialfilereaders.Gene)
 		batch.Put([]byte(gene.Sequence), []byte(gene.Name))
 	}
 

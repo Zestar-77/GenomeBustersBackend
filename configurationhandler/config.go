@@ -1,4 +1,4 @@
-package configurationHandler
+package configurationhandler
 
 import (
 	"GenomeBustersBackend/global"
