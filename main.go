@@ -1,7 +1,7 @@
 package main
 
 import (
-	cnf "GenomeBustersBackend/configurationHandler"
+	cnf "GenomeBustersBackend/configurationhandler"
 	"GenomeBustersBackend/genedatabase"
 	"GenomeBustersBackend/global"
 	"GenomeBustersBackend/interactive"

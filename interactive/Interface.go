@@ -11,7 +11,7 @@ import (
 	"os/exec"
 	"strings"
 
-	cnf "GenomeBustersBackend/configurationHandler"
+	cnf "GenomeBustersBackend/configurationhandler"
 	"GenomeBustersBackend/genedatabase"
 	"GenomeBustersBackend/global"
 

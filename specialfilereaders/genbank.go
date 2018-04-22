@@ -1,3 +1,4 @@
+package specialfilereaders
 /*Package specialFileReaders handles reading special files.
 This package should contain functions optimized for reading different formats for gene files
 this includes genbank files

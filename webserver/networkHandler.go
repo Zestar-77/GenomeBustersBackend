@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"GenomeBustersBackend/analyzer"
-	"GenomeBustersBackend/specialFileReaders"
+	"GenomeBustersBackend/specialfilereaders"
 )
 
 var (
@@ -56,7 +56,7 @@ func GeneSearch(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		log.Printf("File is genbank\n")
-		genFile, err := specialFileReaders.NewGenebankFile(file)
+		genFile, err := specialfilereaders.NewGenebankFile(file)
 		if err != nil {
 			log.Printf("could not read uploaded file\n")
 			http.Error(w, err.Error(), http.StatusBadRequest)
