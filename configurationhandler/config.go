@@ -1,4 +1,5 @@
 package configurationhandler
+
 /**
 package configurationHandler
 
@@ -7,7 +8,6 @@ It is also responsible for setting the logger for the project in the global pack
 
 using the pflag and viper libraries for command line options and configuration files
 */
-package configurationHandler
 
 import (
 	"GenomeBustersBackend/global"

@@ -1,9 +1,9 @@
 package specialfilereaders
+
 /*Package specialFileReaders handles reading special files.
 This package should contain functions optimized for reading different formats for gene files
 this includes genbank files
 */
-package specialFileReaders
 
 import (
 	"GenomeBustersBackend/global"
@@ -85,6 +85,7 @@ func NewGenebankFile(reader io.Reader) (*GenebankFile, error) {
 			}
 			continue
 		} else if !reachedGenome {
+			file.finalizeGene(gene)
 			reachedGenome = true
 			continue
 		} else if line == "//" {

@@ -24,6 +24,13 @@
             "program": "${workspaceRoot}/analyzer"
         },
         {
+            "name": "Test genedatabase",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceRoot}/genedatabase"
+        },
+        {
             "name": "Go run",
             "type": "go",
             "request": "launch",
