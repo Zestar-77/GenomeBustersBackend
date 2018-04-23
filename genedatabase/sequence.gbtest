@@ -1,0 +1,14 @@
+COMMENT     Test file for testing, test file adapted (ie, almost everything stripped out of
+          and a fictitious gene label placed in)
+          from Bacillus subtitles PY79, complete genome.
+
+FEATURES             Location/Qualifiers
+     source          1..250
+     gene            11..61
+                     /locus_tag="TEST"
+ORIGIN      
+        1 atctttttcg atgtttttta gtatccacag aggttatcga caacattttc acattaccaa
+       61 cccctgttaa caaggttttt tcaacaggtt gtccgctttg tggataagat tgtgacaacc
+      121 attgcaagct ctcgtttatt ttggtattat atttgtgttt taactcttga ttactaatcc
+      181 tacctttcct ctttatccac aaagtgtgga taagttgtgg attgatttca cacagcttgt
+      241 gtagaaggtt gtccacaagt tgtgaaattt gtcgaaaagc tatttatcta ctatattata

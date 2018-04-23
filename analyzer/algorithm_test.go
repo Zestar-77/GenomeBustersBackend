@@ -1,12 +1,33 @@
 package analyzer
 
 import (
+	"GenomeBustersBackend/genedatabase"
+	"GenomeBustersBackend/global"
 	"GenomeBustersBackend/specialfilereaders"
 	"bufio"
+	"log"
 	"os"
 	"strconv"
 	"testing"
 )
+
+// TestMain runs prior to the entire test suit, and is used for setup/tear down of the environment
+func TestMain(m *testing.M) {
+	file, err := os.OpenFile(os.DevNull, os.O_APPEND|os.O_WRONLY, 0666) // Ignore log messages by sending them to platform agnostic os.DevNull
+	if err != nil {
+		panic(err)
+	}
+	global.Log = log.New(file, "TESTING: ", log.Lmicroseconds)
+	closer, err := genedatabase.InitializeDatabase()
+	if err != nil {
+		panic(err)
+	}
+
+	exitCode := m.Run()
+	file.Close()
+	closer()
+	os.Exit(exitCode)
+}
 
 func TestGetOneInSequenceStartOverEnd(T *testing.T) {
 	test := [11]rune{'C', 'T', 'T', 'T', 'G', 'A', 'A', 'A', 'A', 'T', 'G'}
@@ -136,24 +157,23 @@ func TestGeneCount(T *testing.T) {
 		}
 	}
 }
-func TestGeneCountWithMinLength(T *testing.T){
-	test := [37]rune{ 'A', 'T', 'G', 'T', 'A', 'A',
-		'A', 'T', 'G','A', 'T', 'G', 'T', 'A', 'A',
+func TestGeneCountWithMinLength(T *testing.T) {
+	test := [37]rune{'A', 'T', 'G', 'T', 'A', 'A',
+		'A', 'T', 'G', 'A', 'T', 'G', 'T', 'A', 'A',
 		'A', 'T', 'G', 'T', 'A', 'A',
 		'A', 'T', 'G', 'T', 'A', 'A',
 		'A', 'T', 'G', 'T', 'A', 'A',
 		'A', 'A', 'A', 'A'}
 	gen1 := make(chan []Gene)
-	cc1 :=&concurrentCounter{}
-	cc2 :=&concurrentCounter{}
-	go count(test[:],gen1, cc1, cc2,5)
-	temp:= <- gen1
-	if len(temp)!=1{
-		T.Error("there should 1 gene"+strconv.Itoa(len(temp)))
+	cc1 := &concurrentCounter{}
+	cc2 := &concurrentCounter{}
+	go count(test[:], gen1, cc1, cc2, 5)
+	temp := <-gen1
+	if len(temp) != 1 {
+		T.Error("there should 1 gene" + strconv.Itoa(len(temp)))
 	}
 
 }
-
 
 func TestGenesInPhase(T *testing.T) {
 	minLength = 0

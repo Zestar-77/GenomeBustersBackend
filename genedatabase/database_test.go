@@ -20,12 +20,19 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
+func WipeDatabase(T *testing.T) {
+	if err := os.RemoveAll("busted.db"); err != nil {
+		T.Fatalf("Unable to delete database: %v", err)
+	}
+}
+
 func TestDBAddAndRetrive(T *testing.T) {
 	closer, err := InitializeDatabase()
 	if err != nil {
 		T.Error(err)
 		return
 	}
+	defer WipeDatabase(T)
 	defer closer()
 	AddGenBank("sequence.gb")
 	if GetGeneLabel([]byte{77, 70, 70, 83, 73, 72, 82, 71, 89, 82, 81, 72, 70, 72, 73, 84, 78}) != "TEST" {
@@ -39,12 +46,8 @@ func TestDBPersistance(T *testing.T) {
 		T.Error(err)
 		return
 	}
+	defer WipeDatabase(T)
 	AddGenBank("sequence.gb")
-	defer func(T *testing.T) {
-		if err := os.RemoveAll("busted.db"); err != nil {
-			T.Fatalf("Unable to delete database: %v", err)
-		}
-	}(T)
 	closer()
 	closer, err = InitializeDatabase()
 	if err != nil {
@@ -63,5 +66,31 @@ func TestDBPersistance(T *testing.T) {
 	}
 	if !pass {
 		T.Error("Unable to find TEST gene")
+	}
+}
+
+func TestMultipleGenes(T *testing.T) {
+	closer, err := InitializeDatabase()
+	if err != nil {
+		T.Error(err)
+		return
+	}
+	defer WipeDatabase(T)
+	defer closer()
+	AddGenBank("sequence.1.gb")
+
+	iter := db.NewIterator(nil, nil)
+	defer iter.Release()
+	pass := 0
+	for iter.Next() {
+		v := iter.Value()
+		if string(v) == "TEST1" {
+			pass++
+		} else if string(v) == "TEST2" {
+			pass++
+		}
+	}
+	if pass != 2 {
+		T.Error("Unable to find all entered genes")
 	}
 }

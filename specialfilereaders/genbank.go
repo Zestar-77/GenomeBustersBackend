@@ -172,11 +172,11 @@ func codonToAmino(s string, complement bool) []byte {
 			buffer.WriteRune(rune(global.CodonMap[s[i:i+3]]))
 		} else {
 			codonSequence := s[i : i+3]
-			codonSequence = strings.Replace(codonSequence, "t", "A", 0)
-			codonSequence = strings.Replace(codonSequence, "a", "T", 0)
-			codonSequence = strings.Replace(codonSequence, "g", "C", 0)
-			codonSequence = strings.Replace(codonSequence, "c", "G", 0)
-			codonSequence = strings.ToLower(codonSequence)
+			codonSequence = strings.Replace(codonSequence, "T", "a", -1)
+			codonSequence = strings.Replace(codonSequence, "A", "t", -1)
+			codonSequence = strings.Replace(codonSequence, "G", "c", -1)
+			codonSequence = strings.Replace(codonSequence, "C", "g", -1)
+			codonSequence = strings.ToUpper(codonSequence)
 			buffer.WriteRune(global.CodonMap[codonSequence])
 		}
 	}

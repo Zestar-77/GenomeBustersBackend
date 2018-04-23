@@ -1,0 +1,16 @@
+COMMENT     Test file for testing, test file adapted (ie, almost everything stripped out of
+          and a fictitious gene label placed in)
+          from Bacillus subtitles PY79, complete genome.
+          This test file has 2 genes and is used to test parsing multiple genes in a file
+FEATURES             Location/Qualifiers
+     source          1..250
+     gene            11..61
+                     /locus_tag="TEST1"
+     gene            65..75
+                     /locus_tag="TEST2"
+ORIGIN      
+        1 atctttttcg atgtttttta gtatccacag aggttatcga caacattttc acattaccaa
+       61 cccctgttaa caaggttttt tcaacaggtt gtccgctttg tggataagat tgtgacaacc
+      121 attgcaagct ctcgtttatt ttggtattat atttgtgttt taactcttga ttactaatcc
+      181 tacctttcct ctttatccac aaagtgtgga taagttgtgg attgatttca cacagcttgt
+      241 gtagaaggtt gtccacaagt tgtgaaattt gtcgaaaagc tatttatcta ctatattata
