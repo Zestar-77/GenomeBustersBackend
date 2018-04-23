@@ -24,7 +24,7 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func TestRegexes(T *testing.T) {
+func TestRegex(T *testing.T) {
 	r := geneIndexRange.FindStringSubmatch("gene 5..6")
 	if len(r) != 3 {
 		T.Error("gene index range regex is broken")

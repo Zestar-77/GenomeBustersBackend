@@ -34,8 +34,9 @@ func TestDBAddAndRetrive(T *testing.T) {
 	}
 	defer WipeDatabase(T)
 	defer closer()
-	AddGenBank("sequence.gb")
-	if GetGeneLabel([]byte{77, 70, 70, 83, 73, 72, 82, 71, 89, 82, 81, 72, 70, 72, 73, 84, 78}) != "TEST" {
+	AddGenBank("sequence.gbtest")
+	label := GetGeneLabel([]byte{77, 70, 70, 83, 73, 72, 82, 71, 89, 82, 81, 72, 70, 72, 73, 84, 78})
+	if label != "TEST" {
 		T.Error("Either unable to add or unable to retrive from db")
 	}
 }
@@ -47,7 +48,7 @@ func TestDBPersistance(T *testing.T) {
 		return
 	}
 	defer WipeDatabase(T)
-	AddGenBank("sequence.gb")
+	AddGenBank("sequence.gbtest")
 	closer()
 	closer, err = InitializeDatabase()
 	if err != nil {
@@ -77,7 +78,7 @@ func TestMultipleGenes(T *testing.T) {
 	}
 	defer WipeDatabase(T)
 	defer closer()
-	AddGenBank("sequence.1.gb")
+	AddGenBank("sequence.1.gbtest")
 
 	iter := db.NewIterator(nil, nil)
 	defer iter.Release()
