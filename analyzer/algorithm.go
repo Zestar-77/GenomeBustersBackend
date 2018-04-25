@@ -5,6 +5,7 @@ WARNING this algorithm should NOT be considered definitive and its accuracy shou
 package analyzer
 
 import (
+	cnf "GenomeBustersBackend/configurationhandler"
 	"GenomeBustersBackend/genedatabase"
 	"GenomeBustersBackend/global"
 	"math"
@@ -42,15 +43,60 @@ type Genome struct {
 	Filename       string `json:"filename"`
 }
 
+func Modify(genome []rune, compliment, reverse bool) []rune {
+	var i int
+	if reverse {
+		i = len(genome) - 1
+	}
+	newGenome := make([]rune, len(genome))
+	for _, r := range genome {
+		if compliment {
+			switch r {
+			case 'T':
+				r = 'A'
+			case 'A':
+				r = 'T'
+			case 't':
+				r = 'a'
+			case 'G':
+				r = 'C'
+			case 'C':
+				r = 'G'
+			case 'g':
+				r = 'c'
+			case 'c':
+				r = 'g'
+			}
+		}
+
+		newGenome[i] = r
+		if reverse {
+			r--
+		} else {
+			r++
+		}
+	}
+	return newGenome
+}
+
 // Analyze analyzes the genome and returns found genes.
 func Analyze(genome []rune) Genome {
 	gen := make(chan []Gene)
+	gen1 := make(chan []Gene)
+	gen2 := make(chan []Gene)
+	gen3 := make(chan []Gene)
 
 	UnknownCounter := &concurrentCounter{}
 	UUIDCounter := &concurrentCounter{}
-	go count(genome, gen, UnknownCounter, UUIDCounter, 68)
+	go count(genome, gen, UnknownCounter, UUIDCounter, cnf.GetConfig().GetInt("geneThreshold"))
+	go count(Modify(genome, false, true), gen1, UnknownCounter, UUIDCounter, cnf.GetConfig().GetInt("geneThreshold"))
+	go count(Modify(genome, true, false), gen2, UnknownCounter, UUIDCounter, cnf.GetConfig().GetInt("geneThreshold"))
+	go count(Modify(genome, true, true), gen3, UnknownCounter, UUIDCounter, cnf.GetConfig().GetInt("geneThreshold"))
 
 	genes := <-gen
+	genes = append(genes, (<-gen1)...)
+	genes = append(genes, (<-gen2)...)
+	genes = append(genes, (<-gen3)...)
 	return Genome{genes, len(genes), len(genome), ""}
 }
 

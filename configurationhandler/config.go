@@ -88,6 +88,7 @@ func initializeConfiguration() *viper.Viper {
 	flag.Bool("color-256", true, "Determines whether or not to use 256 colors. Windows consoles do not support this, and as such this will have no effect there. Defaults to true")
 	flag.Bool("LogToConsole", false, "Instead of getting the interactive prompt, print log to stdout. Exit with ^c")
 	flag.Bool("help", false, "Show the help text")
+	flag.Int("geneThreshold", 150, "Threshold for the length of a gene in the gene finding algorithm.")
 	flag.Parse()
 
 	v := viper.New()

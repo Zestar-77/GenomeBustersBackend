@@ -1,4 +1,5 @@
 port = 3000
 apiPort = 8080
 apiAddress = "127.0.0.1"
-skipRebuile=true
+skipRebuild=true
+geneThreshold=150
